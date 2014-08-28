@@ -29,7 +29,7 @@ import akka.routing.RoundRobinRouter
 import com.typesafe.config.Config
 
 import de.kp.spark.rest.{Configuration,SearchMessage,SearchResponse,ResponseStatus}
-import de.kp.spark.rest.kafka.KafkaContext
+import de.kp.spark.rest.elastic.ElasticContext
 
 import scala.concurrent.duration.DurationInt
 
@@ -37,6 +37,14 @@ class SearchMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
+  
+  val ec = new ElasticContext()
+  
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
+    case _ : Exception => SupervisorStrategy.Restart
+  }
+
+  val elasticRouter = context.actorOf(Props(new ElasticActor(ec)).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
@@ -48,6 +56,14 @@ class SearchMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
+      val response = ask(elasticRouter, req).mapTo[SearchResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new SearchResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
   

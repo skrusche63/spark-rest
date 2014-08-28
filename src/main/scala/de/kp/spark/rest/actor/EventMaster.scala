@@ -39,14 +39,14 @@ class EventMaster extends Actor with ActorLogging {
   /* Load configuration for kafka */
   val (topic,brokers) = Configuration.kafka
   
-  val kafkaConfig = Map("kafka.topic" -> topic,"kafka.brokers" -> brokers)
+  val kafkaConfig = Map("kafka.brokers" -> brokers)
   val kc = new KafkaContext(kafkaConfig)
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val kafkaRouter = context.actorOf(Props(new KafkaActor(kc)).withRouter(RoundRobinRouter(workers)))
+  val kafkaRouter = context.actorOf(Props(new KafkaActor(kc,topic)).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     

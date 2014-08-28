@@ -20,19 +20,16 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.kafka.KafkaContext
+import de.kp.spark.rest.{SearchMessage,SearchResponse,ResponseStatus}
+import de.kp.spark.rest.elastic.ElasticContext
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:EventMessage => {
+    case req:SearchMessage => {
       
       val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
-      
-      kc.send(topic,req)
       
     }
     

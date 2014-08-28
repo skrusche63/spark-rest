@@ -27,7 +27,6 @@ import de.kp.spark.rest.EventMessage
 
 class KafkaContext(settings:Map[String,String]) {
 
-  private val topic = settings("kafka.topic")
   /*
    * This is for bootstrapping and the producer will only use it for getting metadata 
    * (topics, partitions and replicas). The socket connections for sending the actual 
@@ -102,7 +101,7 @@ class KafkaContext(settings:Map[String,String]) {
 
   private val producer = new Producer[String, EventMessage](new ProducerConfig(props))
 
-  def send(message:EventMessage) {
+  def send(topic:String,message:EventMessage) {
     producer.send(new KeyedMessage[String, EventMessage](topic, message))
   }
   
