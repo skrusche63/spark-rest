@@ -26,12 +26,12 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,MiningMessage,MiningResponse,ResponseStatus}
-import de.kp.spark.rest.mining.MiningContext
+import de.kp.spark.rest.{Configuration,PredictionMessage,PredictionResponse,ResponseStatus}
+import de.kp.spark.rest.prediction.PredictionContext
 
 import scala.concurrent.duration.DurationInt
 
-class MiningMaster extends Actor with ActorLogging {
+class PredictionMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
@@ -40,12 +40,12 @@ class MiningMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val mc = new MiningContext()
-  val miningRouter = context.actorOf(Props(new MiningActor(mc)).withRouter(RoundRobinRouter(workers)))
+  val pc = new PredictionContext()
+  val predictionRouter = context.actorOf(Props(new PredictionActor(pc)).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
-    case req:MiningMessage => {
+    case req:PredictionMessage => {
       
       implicit val ec = context.dispatcher
 
@@ -53,19 +53,17 @@ class MiningMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(miningRouter, req).mapTo[MiningResponse]
+      val response = ask(predictionRouter, req).mapTo[PredictionResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new MiningResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new PredictionResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }
-  
     case _ => {}
     
   }
-  
 }

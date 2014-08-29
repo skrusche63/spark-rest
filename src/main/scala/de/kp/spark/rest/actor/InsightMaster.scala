@@ -26,10 +26,8 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import com.typesafe.config.Config
-
 import de.kp.spark.rest.{Configuration,InsightMessage,InsightResponse,ResponseStatus}
-import de.kp.spark.rest.kafka.KafkaContext
+import de.kp.spark.rest.insight.InsightContext
 
 import scala.concurrent.duration.DurationInt
 
@@ -37,6 +35,13 @@ class InsightMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
+
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
+    case _ : Exception => SupervisorStrategy.Restart
+  }
+
+  val ic = new InsightContext()
+  val insightRouter = context.actorOf(Props(new InsightActor(ic)).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
@@ -48,6 +53,14 @@ class InsightMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
+      val response = ask(insightRouter, req).mapTo[InsightResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new InsightResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
   

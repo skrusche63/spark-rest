@@ -18,18 +18,41 @@ package de.kp.spark.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+ * Event support: Data ingestion from dynamic customer or visitor
+ * engagement. Any tracking message that provides a JSON data format 
+ * is capable to be sent to the event
+ */
 case class EventMessage(data:Map[String,String])
 
 case class EventResponse(status:String)
 
+/*
+ * Insight support: A common interface to send SQL-alike
+ * query statements to get more insight from ingested data
+ */
 case class InsightMessage(data:Map[String,String])
 
 case class InsightResponse(status:String)
 
+/*
+ * Insight support: A common interface to process large-scale
+ * datasets that are accessible via this API
+ */
 case class MiningMessage(data:Map[String,String])
 
 case class MiningResponse(status:String)
 
+/*
+ * Prediction support
+ */
+case class PredictionMessage(data:Map[String,String])
+
+case class PredictionResponse(status:String)
+
+/*
+ * Search support
+ */
 case class SearchMessage(data:Map[String,String])
 
 case class SearchResponse(status:String)

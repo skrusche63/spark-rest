@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,InsightMaster,MiningMaster,SearchMaster}
+import de.kp.spark.rest.actor.{EventMaster,InsightMaster,MiningMaster,PredictionMaster,SearchMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -48,14 +48,19 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   
   /* Mining master actor */
   val miningMaster = system.actorOf(Props[MiningMaster], name="mining-master")
-  
+
+  /* Prediction master actor */
+  val predictionMaster = system.actorOf(Props[PredictionMaster], name="prediction-master")
+
   /* Search master actor */
   val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
  
   def start() {
     RestService.start(routes,system,host,port)
   }
-  
+  /*
+   * The routes defines the different access channels this API supports
+   */
   private def routes:Route = {
 
     path("event") {
@@ -76,6 +81,13 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => event(ctx)
+	    }
+	  }
+    }  ~ 
+    path("predict") {
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => predict(ctx)
 	    }
 	  }
     }  ~ 
@@ -128,6 +140,19 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
   
+  private def predict[T](ctx:RequestContext) = {
+     
+    val req = getRequest(ctx)
+    val message = new PredictionMessage(req)
+      
+    val duration = Configuration.actor      
+    implicit val timeout:Timeout = DurationInt(duration).second
+    
+    val response = ask(predictionMaster,message).mapTo[PredictionResponse] 
+    ctx.complete(response)
+    
+  }
+ 
   private def search[T](ctx:RequestContext) = {
      
     val req = getRequest(ctx)

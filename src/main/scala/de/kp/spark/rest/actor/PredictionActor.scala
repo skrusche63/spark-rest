@@ -20,19 +20,26 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+import de.kp.spark.rest.{PredictionMessage,PredictionResponse,ResponseStatus}
+import de.kp.spark.rest.prediction.PredictionContext
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+class PredictionActor(pc:PredictionContext) extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:EventMessage => {
+    case req:PredictionMessage => {
       
       val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
+      val response = pc.send(req).mapTo[PredictionResponse]
       
-      kc.send(topic,req)
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new PredictionResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
     

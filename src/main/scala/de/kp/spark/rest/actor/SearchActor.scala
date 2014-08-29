@@ -20,19 +20,26 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+import de.kp.spark.rest.{SearchMessage,SearchResponse,ResponseStatus}
+import de.kp.spark.rest.search.SearchContext
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+class SearchActor(sc:SearchContext) extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:EventMessage => {
+    case req:SearchMessage => {
       
       val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
+      val response = sc.send(req).mapTo[SearchResponse]
       
-      kc.send(topic,req)
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new SearchResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
     

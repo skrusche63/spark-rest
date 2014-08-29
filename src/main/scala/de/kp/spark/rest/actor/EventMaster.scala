@@ -27,7 +27,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
 import de.kp.spark.rest.{Configuration,EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.kafka.KafkaContext
+import de.kp.spark.rest.event.KafkaContext
 
 import scala.concurrent.duration.DurationInt
 

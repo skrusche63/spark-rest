@@ -1,4 +1,4 @@
-package de.kp.spark.rest.actor
+package de.kp.spark.rest.search
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,23 +18,14 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import de.kp.spark.rest.RemoteClient
+import scala.concurrent.Future
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+class SearchContext {
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+  private val service = "search"
+  private val client = new RemoteClient(service)
 
-  def receive = {
-    
-    case req:EventMessage => {
-      
-      val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
-      
-      kc.send(topic,req)
-      
-    }
-    
-  }
+  def send(req:Any):Future[Any] = client.send(req)
+  
 }

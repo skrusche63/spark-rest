@@ -1,4 +1,4 @@
-package de.kp.spark.rest.elastic
+package de.kp.spark.rest
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -22,30 +22,24 @@ import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 
 import akka.pattern.ask
-
 import akka.util.Timeout
 
-import scala.concurrent.duration._
 import scala.concurrent.duration.Duration._
-
 import scala.concurrent.duration.DurationInt
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class ElasticClient {
+class RemoteClient(service:String) {
 
-  private val name = "elastic-client"
-  private val path = "client.conf"
-    
+  private val path = "client.conf"    
   private val conf = ConfigFactory.load(path)
-  
-  private val url = conf.getConfig("elastic").getString("url")
 
-  private val duration = conf.getConfig("elastic").getInt("timeout")
+  private val duration = conf.getConfig(service).getInt("timeout")
   implicit val timeout = Timeout(DurationInt(duration).second)
+  
+  private val url = Registry.get(service)
     
-  private val system = ActorSystem(name, conf)
+  private val system = ActorSystem(service, conf)
   private val remote = system.actorSelection(url)
 
   def send(req:Any):Future[Any] = ask(remote, req)    

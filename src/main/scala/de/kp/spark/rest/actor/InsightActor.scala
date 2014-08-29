@@ -20,19 +20,26 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+import de.kp.spark.rest.{InsightMessage,InsightResponse,ResponseStatus}
+import de.kp.spark.rest.insight.InsightContext
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+class InsightActor(ic:InsightContext) extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:EventMessage => {
+    case req:InsightMessage => {
       
       val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
+      val response = ic.send(req).mapTo[InsightResponse]
       
-      kc.send(topic,req)
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new InsightResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
     

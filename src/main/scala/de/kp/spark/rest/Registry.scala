@@ -1,4 +1,4 @@
-package de.kp.spark.rest.actor
+package de.kp.spark.rest
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,23 +18,41 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import scala.xml._
 
-import de.kp.spark.rest.{EventMessage,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+import scala.io.Source
+import scala.collection.mutable.{ArrayBuffer,HashMap}
 
-class KafkaActor(kc:KafkaContext,topic:String) extends Actor with ActorLogging {
+import scala.util.control.Breaks._
 
-  def receive = {
-    
-    case req:EventMessage => {
+object Registry {
+
+  private val conf = Configuration
+  private val path = "services.xml"
+  
+  private val root:Elem = XML.load(getClass.getClassLoader.getResource(path))
+  
+  private val services = HashMap.empty[String,String]
+  
+  load()
+  
+  private def load() {
+
+    for (service <- root \ "service") {
       
-      val origin = sender
-      origin ! new EventResponse(ResponseStatus.SUCCESS)
+      val name  = (service \ "@name").toString
+      val url = service.text
       
-      kc.send(topic,req)
+      services += name -> url
       
     }
+
+  }
+
+  def get(name:String):String = services.get(name).get
+  
+  def main(args:Array[String]) {
     
   }
+  
 }

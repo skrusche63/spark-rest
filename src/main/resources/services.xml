@@ -1,0 +1,3 @@
+<services>
+	<service name="search">akka.tcp://elastic-server@127.0.0.1:2600/user/elastic-master</service>
+</services>

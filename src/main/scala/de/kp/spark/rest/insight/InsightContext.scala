@@ -1,4 +1,4 @@
-package de.kp.spark.rest.elastic
+package de.kp.spark.rest.insight
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,8 +18,15 @@ package de.kp.spark.rest.elastic
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-class ElasticContext {
+import de.kp.spark.rest.RemoteClient
+import scala.concurrent.Future
 
-  private val client = new ElasticClient()
+class InsightContext {
+
+  // TODO we support a set of different insight channels and associated micro services
+  private val service = "insight"
+  private val client = new RemoteClient(service)
+
+  def send(req:Any):Future[Any] = client.send(req)
   
 }

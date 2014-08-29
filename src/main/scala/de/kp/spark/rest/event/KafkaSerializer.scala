@@ -1,4 +1,4 @@
-package de.kp.spark.rest.kafka
+package de.kp.spark.rest.event
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project

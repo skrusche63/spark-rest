@@ -20,18 +20,29 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{SearchMessage,SearchResponse,ResponseStatus}
-import de.kp.spark.rest.elastic.ElasticContext
+import de.kp.spark.rest.{MiningMessage,MiningResponse,ResponseStatus}
+import de.kp.spark.rest.mining.MiningContext
 
-class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
+class MiningActor(mc:MiningContext) extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:SearchMessage => {
+    case req:MiningMessage => {
       
       val origin = sender
+      val response = mc.send(req).mapTo[MiningResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new MiningResponse(ResponseStatus.FAILURE)	      
+	  }
       
     }
     
   }
+
 }
