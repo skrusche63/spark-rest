@@ -26,8 +26,7 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,InsightMessage,InsightResponse,ResponseStatus}
-import de.kp.spark.rest.context.InsightContext
+import de.kp.spark.rest.{Configuration,InsightRequest,InsightResponse,ResponseStatus}
 
 import scala.concurrent.duration.DurationInt
 
@@ -40,12 +39,11 @@ class InsightMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val ic = new InsightContext()
-  val insightRouter = context.actorOf(Props(new InsightActor(ic)).withRouter(RoundRobinRouter(workers)))
+  val router = context.actorOf(Props(new InsightActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
-    case req:InsightMessage => {
+    case req:InsightRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -53,7 +51,7 @@ class InsightMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(insightRouter, req).mapTo[InsightResponse]
+      val response = ask(router, req).mapTo[InsightResponse]
       
       response.onSuccess {
         case result => origin ! result

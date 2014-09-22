@@ -43,7 +43,9 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   /* Event master actor */
   val eventMaster = system.actorOf(Props[EventMaster], name="event-master")
   
-  /* Insight master actor */
+  /* 
+   * The master actor that handles all insight requests 
+   */
   val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
   
   /* 
@@ -136,15 +138,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
 
-  private def insight[T](ctx:RequestContext) = {
+  private def insight[T](ctx:RequestContext,service:String="insight") = {
      
-    val req = getRequest(ctx)
-    val message = new InsightMessage(req)
+    val request = new InsightRequest(service,getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(insightMaster,message).mapTo[InsightResponse] 
+    val response = ask(insightMaster,request).mapTo[InsightResponse] 
     ctx.complete(response)
    
   }

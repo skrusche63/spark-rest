@@ -20,19 +20,19 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{InsightMessage,InsightResponse,ResponseStatus}
+import de.kp.spark.rest.{InsightRequest,InsightResponse,ResponseStatus}
 import de.kp.spark.rest.context.InsightContext
 
-class InsightActor(ic:InsightContext) extends Actor with ActorLogging {
+class InsightActor() extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:InsightMessage => {
+    case req:InsightRequest => {
       
       val origin = sender
-      val response = ic.send(req).mapTo[InsightResponse]
+      val response = InsightContext.send(req).mapTo[InsightResponse]
       
       response.onSuccess {
         case result => origin ! result

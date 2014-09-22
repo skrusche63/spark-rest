@@ -31,8 +31,7 @@ case class EventResponse(status:String)
  * Insight support: A common interface to send SQL-alike
  * query statements to get more insight from ingested data
  */
-case class InsightMessage(data:Map[String,String])
-
+case class InsightRequest(service:String,data:Map[String,String])
 case class InsightResponse(status:String)
 
 case class TrainRequest(service:String,data:Map[String,String])

@@ -18,15 +18,25 @@ package de.kp.spark.rest.context
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.RemoteClient
+import de.kp.spark.rest.{RemoteClient,InsightRequest}
+
 import scala.concurrent.Future
+import scala.collection.mutable.HashMap
 
-class InsightContext {
+object InsightContext {
 
-  // TODO we support a set of different insight channels and associated micro services
-  private val service = "insight"
-  private val client = new RemoteClient(service)
-
-  def send(req:Any):Future[Any] = client.send(req)
+ private val clientPool = HashMap.empty[String,RemoteClient]
+ 
+  def send(req:InsightRequest):Future[Any] = {
+   
+    val service = req.service
+    if (clientPool.contains(service) == false) {
+      clientPool += service -> new RemoteClient(service)      
+    }
+   
+    val client = clientPool(service)
+    client.send(req)
+ 
+ }
   
 }
