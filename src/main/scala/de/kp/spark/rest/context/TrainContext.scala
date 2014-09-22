@@ -25,7 +25,7 @@ import scala.collection.mutable.HashMap
 
 object TrainContext {
 
- private val clientPool = HashMap.empty[String,RemoteClient]
+  private val clientPool = HashMap.empty[String,RemoteClient]
  
   def send(req:ServiceRequest):Future[Any] = {
    

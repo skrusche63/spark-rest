@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,InsightMaster,PredictMaster,SearchMaster,TrainMaster}
+import de.kp.spark.rest.actor.{EventMaster,InsightMaster,PredictMaster,SearchMaster,StatusMaster,TrainMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -56,10 +56,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   /*
    * The master actor that handles all prediction related post requests 
    */
-  val predictMaster = system.actorOf(Props[PredictMaster], name="prediction-master")
+  val predictMaster = system.actorOf(Props[PredictMaster], name="predict-master")
 
   /* Search master actor */
   val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
+  /*
+   * The master actor that handles all status related post requests 
+   */
+  val statusMaster = system.actorOf(Props[StatusMaster], name="status-master")
  
   def start() {
     RestService.start(routes,system,host,port)
@@ -69,6 +73,17 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    */
   private def routes:Route = {
 
+    path("admin" / Segment) {segment =>
+	  post {
+	    respondWithStatus(OK) {
+	      segment match {
+	        case "cross-sell" => {
+	          ctx => event(ctx)
+	        }
+	      }
+	    }
+	  }
+    }  ~ 
     path("event") {
 	  post {
 	    respondWithStatus(OK) {
@@ -119,6 +134,21 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => search(ctx)
+	    }
+	  }
+    }  ~ 
+    path("status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      segment match {
+	        /*
+	         * Request to retrieve the status of training (or mining) a cross-sell
+	         * model; this request is mapped into the internal 'arules' service
+	         */
+	        case "cross-sell" => {
+	          ctx => status(ctx,"arules")
+	        }
+	      }
 	    }
 	  }
     }
@@ -192,6 +222,21 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val response = ask(searchMaster,message).mapTo[SearchResponse] 
     ctx.complete(response)
    
+  }
+  /**
+   * Common method to handle all status requests; note, that the
+   * route segments are mapped onto a certain service
+   */
+  private def status[T](ctx:RequestContext,service:String) = {
+     
+    val request = new ServiceRequest(service,"status",getRequest(ctx))
+      
+    val duration = Configuration.actor      
+    implicit val timeout:Timeout = DurationInt(duration).second
+    
+    val response = ask(statusMaster,request).mapTo[ServiceResponse] 
+    ctx.complete(response)
+    
   }
 
   private def getHeaders(ctx:RequestContext):Map[String,String] = {

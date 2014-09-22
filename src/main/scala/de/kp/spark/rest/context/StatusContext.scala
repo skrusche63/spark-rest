@@ -23,7 +23,7 @@ import de.kp.spark.rest.{RemoteClient,ServiceRequest}
 import scala.concurrent.Future
 import scala.collection.mutable.HashMap
 
-object PredictContext {
+object StatusContext {
 
   private val clientPool = HashMap.empty[String,RemoteClient]
  
