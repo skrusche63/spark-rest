@@ -26,12 +26,11 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,MiningMessage,MiningResponse,ResponseStatus}
-import de.kp.spark.rest.mining.MiningContext
+import de.kp.spark.rest.{Configuration,TrainRequest,TrainResponse,ResponseStatus}
 
 import scala.concurrent.duration.DurationInt
 
-class MiningMaster extends Actor with ActorLogging {
+class TrainMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
@@ -40,12 +39,11 @@ class MiningMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val mc = new MiningContext()
-  val miningRouter = context.actorOf(Props(new MiningActor(mc)).withRouter(RoundRobinRouter(workers)))
+  val router = context.actorOf(Props(new TrainActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
-    case req:MiningMessage => {
+    case req:TrainRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -53,13 +51,13 @@ class MiningMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(miningRouter, req).mapTo[MiningResponse]
+      val response = ask(router, req).mapTo[TrainResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new MiningResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new TrainResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }

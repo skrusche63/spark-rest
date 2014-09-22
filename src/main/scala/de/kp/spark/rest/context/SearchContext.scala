@@ -1,4 +1,4 @@
-package de.kp.spark.rest.actor
+package de.kp.spark.rest.context
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,30 +18,14 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import de.kp.spark.rest.RemoteClient
+import scala.concurrent.Future
 
-import de.kp.spark.rest.{PredictionMessage,PredictionResponse,ResponseStatus}
-import de.kp.spark.rest.prediction.PredictionContext
+class SearchContext {
 
-class PredictionActor(pc:PredictionContext) extends Actor with ActorLogging {
+  private val service = "search"
+  private val client = new RemoteClient(service)
 
-  implicit val ec = context.dispatcher
-
-  def receive = {
-    
-    case req:PredictionMessage => {
-      
-      val origin = sender
-      val response = pc.send(req).mapTo[PredictionResponse]
-      
-      response.onSuccess {
-        case result => origin ! result
-      }
-      response.onFailure {
-        case result => origin ! new PredictionResponse(ResponseStatus.FAILURE)	      
-	  }
-      
-    }
-    
-  }
+  def send(req:Any):Future[Any] = client.send(req)
+  
 }

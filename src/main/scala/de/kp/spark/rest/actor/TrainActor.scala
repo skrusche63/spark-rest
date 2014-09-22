@@ -1,4 +1,4 @@
-package de.kp.spark.rest.search
+package de.kp.spark.rest.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,14 +18,31 @@ package de.kp.spark.rest.search
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.RemoteClient
-import scala.concurrent.Future
+import akka.actor.{Actor,ActorLogging}
 
-class SearchContext {
+import de.kp.spark.rest.{TrainRequest,TrainResponse,ResponseStatus}
+import de.kp.spark.rest.context.TrainContext
 
-  private val service = "search"
-  private val client = new RemoteClient(service)
+class TrainActor extends Actor with ActorLogging {
 
-  def send(req:Any):Future[Any] = client.send(req)
-  
+  implicit val ec = context.dispatcher
+
+  def receive = {
+    
+    case req:TrainRequest => {
+      
+      val origin = sender
+      val response = TrainContext.send(req).mapTo[TrainResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new TrainResponse(ResponseStatus.FAILURE)	      
+	  }
+      
+    }
+    
+  }
+
 }

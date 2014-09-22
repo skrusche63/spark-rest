@@ -1,4 +1,4 @@
-package de.kp.spark.rest.actor
+package de.kp.spark.rest.context
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,31 +18,15 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import de.kp.spark.rest.RemoteClient
+import scala.concurrent.Future
 
-import de.kp.spark.rest.{MiningMessage,MiningResponse,ResponseStatus}
-import de.kp.spark.rest.mining.MiningContext
+class InsightContext {
 
-class MiningActor(mc:MiningContext) extends Actor with ActorLogging {
+  // TODO we support a set of different insight channels and associated micro services
+  private val service = "insight"
+  private val client = new RemoteClient(service)
 
-  implicit val ec = context.dispatcher
-
-  def receive = {
-    
-    case req:MiningMessage => {
-      
-      val origin = sender
-      val response = mc.send(req).mapTo[MiningResponse]
-      
-      response.onSuccess {
-        case result => origin ! result
-      }
-      response.onFailure {
-        case result => origin ! new MiningResponse(ResponseStatus.FAILURE)	      
-	  }
-      
-    }
-    
-  }
-
+  def send(req:Any):Future[Any] = client.send(req)
+  
 }

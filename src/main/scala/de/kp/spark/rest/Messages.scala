@@ -35,20 +35,11 @@ case class InsightMessage(data:Map[String,String])
 
 case class InsightResponse(status:String)
 
-/*
- * Insight support: A common interface to process large-scale
- * datasets that are accessible via this API
- */
-case class MiningMessage(data:Map[String,String])
+case class TrainRequest(service:String,data:Map[String,String])
+case class TrainResponse(status:String)
 
-case class MiningResponse(status:String)
-
-/*
- * Prediction support
- */
-case class PredictionMessage(data:Map[String,String])
-
-case class PredictionResponse(status:String)
+case class PredictRequest(service:String,data:Map[String,String])
+case class PredictResponse(status:String)
 
 /*
  * Search support

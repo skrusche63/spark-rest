@@ -21,7 +21,7 @@ package de.kp.spark.rest.actor
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.rest.{SearchMessage,SearchResponse,ResponseStatus}
-import de.kp.spark.rest.search.SearchContext
+import de.kp.spark.rest.context.SearchContext
 
 class SearchActor(sc:SearchContext) extends Actor with ActorLogging {
 

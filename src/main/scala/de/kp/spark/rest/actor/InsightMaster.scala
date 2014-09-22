@@ -27,7 +27,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
 import de.kp.spark.rest.{Configuration,InsightMessage,InsightResponse,ResponseStatus}
-import de.kp.spark.rest.insight.InsightContext
+import de.kp.spark.rest.context.InsightContext
 
 import scala.concurrent.duration.DurationInt
 

@@ -21,7 +21,7 @@ package de.kp.spark.rest.actor
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.rest.{InsightMessage,InsightResponse,ResponseStatus}
-import de.kp.spark.rest.insight.InsightContext
+import de.kp.spark.rest.context.InsightContext
 
 class InsightActor(ic:InsightContext) extends Actor with ActorLogging {
 

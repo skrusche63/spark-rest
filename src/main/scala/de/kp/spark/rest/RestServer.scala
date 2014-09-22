@@ -26,7 +26,7 @@ object RestServer {
 
     val (host,port) = Configuration.web
     
-    /* Start REST Api */
+    /* Start REST API */
     new RestApi(host,port,system).start()
       
   }

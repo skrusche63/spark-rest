@@ -1,4 +1,4 @@
-package de.kp.spark.rest.insight
+package de.kp.spark.rest.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,15 +18,30 @@ package de.kp.spark.rest.insight
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.RemoteClient
-import scala.concurrent.Future
+import akka.actor.{Actor,ActorLogging}
 
-class InsightContext {
+import de.kp.spark.rest.{PredictRequest,PredictResponse,ResponseStatus}
+import de.kp.spark.rest.context.PredictContext
 
-  // TODO we support a set of different insight channels and associated micro services
-  private val service = "insight"
-  private val client = new RemoteClient(service)
+class PredictActor() extends Actor with ActorLogging {
 
-  def send(req:Any):Future[Any] = client.send(req)
-  
+  implicit val ec = context.dispatcher
+
+  def receive = {
+    
+    case req:PredictRequest => {
+      
+      val origin = sender
+      val response = PredictContext.send(req).mapTo[PredictResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! new PredictResponse(ResponseStatus.FAILURE)	      
+	  }
+      
+    }
+    
+  }
 }

@@ -27,7 +27,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
 import de.kp.spark.rest.{Configuration,SearchMessage,SearchResponse,ResponseStatus}
-import de.kp.spark.rest.search.SearchContext
+import de.kp.spark.rest.context.SearchContext
 
 import scala.concurrent.duration.DurationInt
 

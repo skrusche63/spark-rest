@@ -26,12 +26,11 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,PredictionMessage,PredictionResponse,ResponseStatus}
-import de.kp.spark.rest.prediction.PredictionContext
+import de.kp.spark.rest.{Configuration,PredictRequest,PredictResponse,ResponseStatus}
 
 import scala.concurrent.duration.DurationInt
 
-class PredictionMaster extends Actor with ActorLogging {
+class PredictMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
@@ -40,12 +39,11 @@ class PredictionMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val pc = new PredictionContext()
-  val predictionRouter = context.actorOf(Props(new PredictionActor(pc)).withRouter(RoundRobinRouter(workers)))
+  val router = context.actorOf(Props(new PredictActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
-    case req:PredictionMessage => {
+    case req:PredictRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -53,13 +51,13 @@ class PredictionMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(predictionRouter, req).mapTo[PredictionResponse]
+      val response = ask(router, req).mapTo[PredictResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new PredictionResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new PredictResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }

@@ -1,3 +1,4 @@
 <services>
 	<service name="search">akka.tcp://elastic-server@127.0.0.1:2600/user/elastic-master</service>
+	<service name="arules">akka.tcp://arules-server@127.0.0.1:2602/user/arules-master</service>
 </services>

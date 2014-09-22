@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,InsightMaster,MiningMaster,PredictionMaster,SearchMaster}
+import de.kp.spark.rest.actor.{EventMaster,InsightMaster,PredictMaster,SearchMaster,TrainMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -46,11 +46,15 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   /* Insight master actor */
   val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
   
-  /* Mining master actor */
-  val miningMaster = system.actorOf(Props[MiningMaster], name="mining-master")
+  /* 
+   * The master actor that handles all train related post requests 
+   */
+  val trainMaster = system.actorOf(Props[TrainMaster], name="train-master")
 
-  /* Prediction master actor */
-  val predictionMaster = system.actorOf(Props[PredictionMaster], name="prediction-master")
+  /*
+   * The master actor that handles all prediction related post requests 
+   */
+  val predictMaster = system.actorOf(Props[PredictMaster], name="prediction-master")
 
   /* Search master actor */
   val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
@@ -77,17 +81,35 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("mining") {
+    path("train" / Segment) {segment =>
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => event(ctx)
+	      segment match {
+	        /*
+	         * Request to train cross-sell models; this request is mapped onto
+	         * the internal 'arules' service and either uses the Top-K or Top-K
+	         * non redundant algorithm 
+	         */
+	        case "cross-sell" => {
+	          ctx => train(ctx,"arules")
+	        }
+	      }
 	    }
 	  }
     }  ~ 
-    path("predict") {
+    path("predict" / Segment) {segment => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => predict(ctx)
+	      segment match {
+	        /*
+	         * Request to predict cross-sell models; this request is mapped onto
+	         * the internal 'arules' service and either uses the Top-K or Top-K
+	         * non redundant algorithm 
+	         */
+	        case "cross-sell" => {
+	          ctx => predict(ctx,"arules")
+	        }
+	      }
 	    }
 	  }
     }  ~ 
@@ -126,29 +148,34 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
    
   }
-  
-  private def mining[T](ctx:RequestContext) = {
+ 
+  /**
+   * Common method to handle all predict requests; note, that the
+   * route segments are mapped onto a certain service
+   */
+  private def predict[T](ctx:RequestContext,service:String) = {
      
-    val req = getRequest(ctx)
-    val message = new MiningMessage(req)
+    val request = new PredictRequest(service,getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(miningMaster,message).mapTo[MiningResponse] 
+    val response = ask(predictMaster,request).mapTo[PredictResponse] 
     ctx.complete(response)
     
   }
-  
-  private def predict[T](ctx:RequestContext) = {
+  /**
+   * Common method to handle all train requests; note, that the
+   * route segments are mapped onto a certain service
+   */
+  private def train[T](ctx:RequestContext,service:String) = {
      
-    val req = getRequest(ctx)
-    val message = new PredictionMessage(req)
+    val request = new TrainRequest(service,getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(predictionMaster,message).mapTo[PredictionResponse] 
+    val response = ask(trainMaster,request).mapTo[TrainResponse] 
     ctx.complete(response)
     
   }
