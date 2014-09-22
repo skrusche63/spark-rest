@@ -35,7 +35,7 @@ case class InsightRequest(service:String,data:Map[String,String])
 case class InsightResponse(status:String)
 
 case class ServiceRequest(service:String,task:String,data:Map[String,String])
-case class ServiceResponse(status:String)
+case class ServiceResponse(service:String,task:String,data:Map[String,String],status:String)
 
 /*
  * Search support

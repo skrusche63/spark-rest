@@ -38,10 +38,18 @@ class PredictActor() extends Actor with ActorLogging {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new ServiceResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! failure(req)	 	      
 	  }
       
     }
     
   }
+  
+  private def failure(req:ServiceRequest):ServiceResponse = {
+    
+    val uid = req.data("uid")    
+    new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
+  
+  }
+
 }
