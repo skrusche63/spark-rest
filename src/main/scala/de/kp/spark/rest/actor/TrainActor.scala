@@ -20,7 +20,7 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{TrainRequest,TrainResponse,ResponseStatus}
+import de.kp.spark.rest.{ServiceRequest,ServiceResponse,ResponseStatus}
 import de.kp.spark.rest.context.TrainContext
 
 class TrainActor extends Actor with ActorLogging {
@@ -29,16 +29,16 @@ class TrainActor extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:TrainRequest => {
+    case req:ServiceRequest => {
       
       val origin = sender
-      val response = TrainContext.send(req).mapTo[TrainResponse]
+      val response = TrainContext.send(req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new TrainResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new ServiceResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }

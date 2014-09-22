@@ -20,7 +20,7 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{PredictRequest,PredictResponse,ResponseStatus}
+import de.kp.spark.rest.{ServiceRequest,ServiceResponse,ResponseStatus}
 import de.kp.spark.rest.context.PredictContext
 
 class PredictActor() extends Actor with ActorLogging {
@@ -29,16 +29,16 @@ class PredictActor() extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:PredictRequest => {
+    case req:ServiceRequest => {
       
       val origin = sender
-      val response = PredictContext.send(req).mapTo[PredictResponse]
+      val response = PredictContext.send(req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new PredictResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new ServiceResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }

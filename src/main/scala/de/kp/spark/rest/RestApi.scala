@@ -156,12 +156,12 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    */
   private def predict[T](ctx:RequestContext,service:String) = {
      
-    val request = new PredictRequest(service,getRequest(ctx))
+    val request = new ServiceRequest(service,"predict",getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(predictMaster,request).mapTo[PredictResponse] 
+    val response = ask(predictMaster,request).mapTo[ServiceResponse] 
     ctx.complete(response)
     
   }
@@ -171,12 +171,12 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    */
   private def train[T](ctx:RequestContext,service:String) = {
      
-    val request = new TrainRequest(service,getRequest(ctx))
+    val request = new ServiceRequest(service,"train",getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(trainMaster,request).mapTo[TrainResponse] 
+    val response = ask(trainMaster,request).mapTo[ServiceResponse] 
     ctx.complete(response)
     
   }

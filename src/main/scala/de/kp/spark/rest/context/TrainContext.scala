@@ -18,7 +18,7 @@ package de.kp.spark.rest.context
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.{RemoteClient,TrainRequest}
+import de.kp.spark.rest.{RemoteClient,ServiceRequest}
 
 import scala.concurrent.Future
 import scala.collection.mutable.HashMap
@@ -27,7 +27,7 @@ object TrainContext {
 
  private val clientPool = HashMap.empty[String,RemoteClient]
  
-  def send(req:TrainRequest):Future[Any] = {
+  def send(req:ServiceRequest):Future[Any] = {
    
     val service = req.service
     if (clientPool.contains(service) == false) {

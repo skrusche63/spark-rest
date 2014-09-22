@@ -34,11 +34,8 @@ case class EventResponse(status:String)
 case class InsightRequest(service:String,data:Map[String,String])
 case class InsightResponse(status:String)
 
-case class TrainRequest(service:String,data:Map[String,String])
-case class TrainResponse(status:String)
-
-case class PredictRequest(service:String,data:Map[String,String])
-case class PredictResponse(status:String)
+case class ServiceRequest(service:String,task:String,data:Map[String,String])
+case class ServiceResponse(status:String)
 
 /*
  * Search support

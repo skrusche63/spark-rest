@@ -26,7 +26,7 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,TrainRequest,TrainResponse,ResponseStatus}
+import de.kp.spark.rest.{Configuration,ServiceRequest,ServiceResponse,ResponseStatus}
 
 import scala.concurrent.duration.DurationInt
 
@@ -43,7 +43,7 @@ class TrainMaster extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:TrainRequest => {
+    case req:ServiceRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -51,13 +51,13 @@ class TrainMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(router, req).mapTo[TrainResponse]
+      val response = ask(router, req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new TrainResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new ServiceResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }
