@@ -28,24 +28,24 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
-import de.kp.spark.rest.EventMessage
+import de.kp.spark.rest.EventRequest
 
-class EventDecoder(props: VerifiableProperties) extends Decoder[EventMessage] {
+class EventDecoder(props: VerifiableProperties) extends Decoder[EventRequest] {
     
   implicit val formats = Serialization.formats(NoTypeHints)
   
-  def fromBytes(bytes: Array[Byte]): EventMessage = {
-    read[EventMessage](new String(bytes, Charsets.UTF_8))
+  def fromBytes(bytes: Array[Byte]): EventRequest = {
+    read[EventRequest](new String(bytes, Charsets.UTF_8))
   }
 
 }
 
-class EventEncoder(props: VerifiableProperties) extends Encoder[EventMessage] {
+class EventEncoder(props: VerifiableProperties) extends Encoder[EventRequest] {
     
   implicit val formats = Serialization.formats(NoTypeHints)
   
-  def toBytes(message: EventMessage): Array[Byte] = {
-    write[EventMessage](message).getBytes(Charsets.UTF_8)
+  def toBytes(message: EventRequest): Array[Byte] = {
+    write[EventRequest](message).getBytes(Charsets.UTF_8)
   }
   
 }

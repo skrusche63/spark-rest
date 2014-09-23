@@ -26,7 +26,7 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,EventMessage,EventResponse,ResponseStatus}
+import de.kp.spark.rest.{Configuration,EventRequest,EventResponse,ResponseStatus}
 import de.kp.spark.rest.event.KafkaContext
 
 import scala.concurrent.duration.DurationInt
@@ -37,7 +37,7 @@ class EventMaster extends Actor with ActorLogging {
   val (time,retries,workers) = Configuration.router   
 
   /* Load configuration for kafka */
-  val (topic,brokers) = Configuration.kafka
+  val brokers = Configuration.kafka
   
   val kafkaConfig = Map("kafka.brokers" -> brokers)
   val kc = new KafkaContext(kafkaConfig)
@@ -46,11 +46,11 @@ class EventMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val kafkaRouter = context.actorOf(Props(new KafkaActor(kc,topic)).withRouter(RoundRobinRouter(workers)))
+  val router = context.actorOf(Props(new KafkaActor(kc)).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
-    case req:EventMessage => {
+    case req:EventRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -58,7 +58,7 @@ class EventMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(kafkaRouter, req).mapTo[EventResponse]
+      val response = ask(router, req).mapTo[EventResponse]
       
       response.onSuccess {
         case result => origin ! result

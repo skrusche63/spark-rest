@@ -23,7 +23,7 @@ import kafka.message.DefaultCompressionCodec
 
 import java.util.{Properties,UUID}
 
-import de.kp.spark.rest.EventMessage
+import de.kp.spark.rest.EventRequest
 
 class KafkaContext(settings:Map[String,String]) {
 
@@ -99,10 +99,13 @@ class KafkaContext(settings:Map[String,String]) {
   props.put("client.id",clientId.toString)
   props.put("serializer.class", "de.kp.spark.rest.kafka.EventEncoder")
 
-  private val producer = new Producer[String, EventMessage](new ProducerConfig(props))
+  private val producer = new Producer[String, EventRequest](new ProducerConfig(props))
 
-  def send(topic:String,message:EventMessage) {
-    producer.send(new KeyedMessage[String, EventMessage](topic, message))
+  def send(req:EventRequest) {
+    
+    val (topic,message) = (req.topic,req)    
+    producer.send(new KeyedMessage[String, EventRequest](topic, message))
+    
   }
   
 }

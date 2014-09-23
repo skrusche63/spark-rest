@@ -73,21 +73,26 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    */
   private def routes:Route = {
 
-    path("admin" / Segment) {segment =>
+    path("admin") {
 	  post {
 	    respondWithStatus(OK) {
-	      segment match {
-	        case "cross-sell" => {
-	          ctx => event(ctx)
-	        }
-	      }
+          ctx => admin(ctx)
 	    }
 	  }
     }  ~ 
-    path("event") {
+    path("event" / Segment) {segment => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => event(ctx)
+	      segment match {
+	        case "transaction" => {
+	          /*
+	           * Request to collect transaction events; this request
+	           * is mapped onto the internal 'transaction' topic as
+	           * it is collected as contribution to a transaction db
+	           */
+	          ctx => event(ctx,"transaction")
+	        }
+	      }
 	    }
 	  }
     }  ~ 
@@ -154,16 +159,25 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
 
   }
-  
-  private def event[T](ctx:RequestContext) = {
+  /**
+   * Common method to handle all admin requests sent to the REST API
+   */
+  private def admin[T](ctx:RequestContext) = {
+    /*
+     * Not implemented yet
+     */
+  }
+  /**
+   * Common method to handle all events sent to the REST API
+   */
+  private def event[T](ctx:RequestContext,topic:String) = {
     
-    val req = getRequest(ctx)
-    val message = new EventMessage(req)
+    val request = new EventRequest(topic,getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(eventMaster,message).mapTo[EventResponse] 
+    val response = ask(eventMaster,request).mapTo[EventResponse] 
     ctx.complete(response)
     
   }
