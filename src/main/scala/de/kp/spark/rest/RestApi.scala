@@ -18,7 +18,7 @@ package de.kp.spark.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{ActorSystem,Props}
+import akka.actor.{ActorRef,ActorSystem,Props}
 import akka.pattern.ask
 
 import akka.util.Timeout
@@ -51,19 +51,19 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   /* 
    * The master actor that handles all train related post requests 
    */
-  val trainMaster = system.actorOf(Props[TrainMaster], name="train-master")
+  val trainer = system.actorOf(Props[TrainMaster], name="train-master")
 
   /*
-   * The master actor that handles all prediction related post requests 
+   * The master actor that handles all (model) retrieval related post requests 
    */
-  val predictMaster = system.actorOf(Props[PredictMaster], name="predict-master")
-
-  /* Search master actor */
-  val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
+  val finder = system.actorOf(Props[PredictMaster], name="find-master")
   /*
    * The master actor that handles all status related post requests 
    */
-  val statusMaster = system.actorOf(Props[StatusMaster], name="status-master")
+  val monitor = system.actorOf(Props[StatusMaster], name="status-master")
+
+  /* Search master actor */
+  val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
  
   def start() {
     RestService.start(routes,system,host,port)
@@ -103,35 +103,128 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("train" / Segment) {segment =>
+    /*
+     * Action specifies a concept that is supported by the REST service;
+     * other concepts are content,feature,product and state
+     */
+    path("action/train" / Segment) {segment =>
 	  post {
 	    respondWithStatus(OK) {
-	      segment match {
-	        /*
-	         * Request to train cross-sell models; this request is mapped onto
-	         * the internal 'arules' service and either uses the Top-K or Top-K
-	         * non redundant algorithm 
-	         */
-	        case "cross-sell" => {
-	          ctx => train(ctx,"arules")
-	        }
-	      }
+	      ctx => doTrain(ctx,"action",segment)
 	    }
 	  }
     }  ~ 
-    path("predict" / Segment) {segment => 
+    path("action/get" / Segment) {segment => 
 	  post {
 	    respondWithStatus(OK) {
-	      segment match {
-	        /*
-	         * Request to predict cross-sell models; this request is mapped onto
-	         * the internal 'arules' service and either uses the Top-K or Top-K
-	         * non redundant algorithm 
-	         */
-	        case "cross-sell" => {
-	          ctx => predict(ctx,"arules")
-	        }
-	      }
+	      ctx => doGet(ctx,"action",segment)
+	    }
+	  }
+    }  ~ 
+    path("action/status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,"action",segment)
+	    }
+	  }
+    }  ~ 
+    /*
+     * Content specifies a concept that is supported by the REST service;
+     * other concepts are action,feature,product and state
+     */
+    path("content/train" / Segment) {segment =>
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrain(ctx,"content",segment)
+	    }
+	  }
+    }  ~ 
+    path("content/get" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doGet(ctx,"content",segment)
+	    }
+	  }
+    }  ~ 
+    path("content/status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,"content",segment)
+	    }
+	  }
+    }  ~ 
+    /*
+     * Feature specifies a concept that is supported by the REST service;
+     * other concepts are action,content,product and state
+     */
+    path("feature/train" / Segment) {segment =>
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrain(ctx,"feature",segment)
+	    }
+	  }
+    }  ~ 
+    path("feature/get" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doGet(ctx,"feature",segment)
+	    }
+	  }
+    }  ~ 
+    path("feature/status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,"feature",segment)
+	    }
+	  }
+    }  ~ 
+    /*
+     * Product specifies a concept that is supported by the REST service;
+     * other concepts are action,content,features and state
+     */
+    path("product/train" / Segment) {segment =>
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrain(ctx,"product",segment)
+	    }
+	  }
+    }  ~ 
+    path("product/get" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doGet(ctx,"product",segment)
+	    }
+	  }
+    }  ~ 
+    path("product/status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,"product",segment)
+	    }
+	  }
+    }  ~ 
+    /*
+     * State specifies a concept that is supported by the REST service;
+     * other concepts are action,content,features and product
+     */
+    path("state/train" / Segment) {segment =>
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrain(ctx,"state",segment)
+	    }
+	  }
+    }  ~ 
+    path("state/get" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doGet(ctx,"state",segment)
+	    }
+	  }
+    }  ~ 
+    path("state/status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,"state",segment)
 	    }
 	  }
     }  ~ 
@@ -139,21 +232,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => search(ctx)
-	    }
-	  }
-    }  ~ 
-    path("status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      segment match {
-	        /*
-	         * Request to retrieve the status of training (or mining) a cross-sell
-	         * model; this request is mapped into the internal 'arules' service
-	         */
-	        case "cross-sell" => {
-	          ctx => status(ctx,"arules")
-	        }
-	      }
 	    }
 	  }
     }
@@ -193,34 +271,87 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
    
   }
- 
-  /**
-   * Common method to handle all predict requests; note, that the
-   * route segments are mapped onto a certain service
-   */
-  private def predict[T](ctx:RequestContext,service:String) = {
-     
-    val request = new ServiceRequest(service,"predict",getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
-    
-    val response = ask(predictMaster,request).mapTo[ServiceResponse] 
-    ctx.complete(response)
+
+  private def doGet[T](ctx:RequestContext,concept:String,segment:String) = {
+
+    segment match {
+	  /*
+	   * Request to retrieve the relation models; this request is mapped 
+	   * onto the internal 'relation' service
+	   */
+	  case "relation" => doRequest(ctx,"rule","get:relation")
+	  /*
+	   * Request to retrieve the rule models; this request is mapped 
+	   * onto the internal 'rule' service
+	   */
+	  case "rule" => doRequest(ctx,"rule","get:rule")
+
+	  case _ => {}
+	  
+    }
     
   }
-  /**
-   * Common method to handle all train requests; note, that the
-   * route segments are mapped onto a certain service
-   */
-  private def train[T](ctx:RequestContext,service:String) = {
+  private def doTrain[T](ctx:RequestContext,concept:String,segment:String) = {
+
+    segment match {
+	  /*
+	   * Request to train outlier with respect to features; the requestor
+	   * has to make sure that the appropriate algorithm is selected, i.e.
+	   * for features this is KMeans and for states this is MARKOV
+	   */
+	  case "outlier" => doRequest(ctx,"outlier","train")
+	  /*
+	   * Request to train rule-based models; this request is mapped 
+	   * onto the internal 'rule' service and either uses the Top-K or 
+	   * Top-K non redundant algorithm 
+	   */
+	  case "rule" => doRequest(ctx,"rule","train")
+	  /*
+	   * Request to train series-based models; this request is mapped 
+	   * onto the internal 'series' service and either uses the SPADE
+	   * or TSR algorithm 
+	   */
+	  case "series" => doRequest(ctx,"series","train")
+      
+	  case _ => {}
+	  
+    }
+  
+  }
+
+  private def doStatus[T](ctx:RequestContext,concept:String,segment:String) = {
+
+    segment match {
+	  /*
+	   * Request to retrieve the status of training (or mining) an outlier
+	   * model
+	   */
+	  case "outlier" => doRequest(ctx,"outlier","status")
+	  /*
+	   * Request to retrieve the status of training (or mining) a rule-based
+	   * model
+	   */
+	  case "rule" => doRequest(ctx,"rule","status")
+	  /*
+	   * Request to retrieve the status of training (or mining) a series-based
+	   * model
+	   */
+	  case "series" => doRequest(ctx,"series","status")
+      
+	  case _ => {}
+	  
+    }
+   
+  }
+  
+  private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
      
-    val request = new ServiceRequest(service,"train",getRequest(ctx))
+    val request = new ServiceRequest(service,task,getRequest(ctx))
       
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(trainMaster,request).mapTo[ServiceResponse] 
+    val response = ask(master(task),request).mapTo[ServiceResponse] 
     ctx.complete(response)
     
   }
@@ -236,21 +367,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val response = ask(searchMaster,message).mapTo[SearchResponse] 
     ctx.complete(response)
    
-  }
-  /**
-   * Common method to handle all status requests; note, that the
-   * route segments are mapped onto a certain service
-   */
-  private def status[T](ctx:RequestContext,service:String) = {
-     
-    val request = new ServiceRequest(service,"status",getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
-    
-    val response = ask(statusMaster,request).mapTo[ServiceResponse] 
-    ctx.complete(response)
-    
   }
 
   private def getHeaders(ctx:RequestContext):Map[String,String] = {
@@ -287,5 +403,20 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
     headers ++ body
     
+  }
+  
+  private def master(task:String):ActorRef = {
+    
+    val req = task.split(":")(0)   
+    req match {
+      
+      case "get"   => finder
+      case "train" => trainer
+      
+      case "status" => monitor
+      
+      case _ => null
+      
+    }
   }
 }

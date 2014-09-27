@@ -1,4 +1,14 @@
 <services>
+
 	<service name="search">akka.tcp://elastic-server@127.0.0.1:2600/user/elastic-master</service>
-	<service name="arules">akka.tcp://arules-server@127.0.0.1:2602/user/arules-master</service>
+	
+	<!-- Rule Analysis is governed by the ARules Service -->
+	<service name="rule">akka.tcp://arules-server@127.0.0.1:2602/user/arules-master</service>
+
+    <!--  Series Analysis is governed by the FSM Service -->
+	<service name="series">akka.tcp://fsm-server@127.0.0.1:2604/user/fsm-master</service>
+	
+	<!-- Outlier Detection is governed by the Outlier Service -->
+	<service name="outlier">akka.tcp://outlier-server@127.0.0.1:2606/user/outlier-master</service>
+
 </services>
