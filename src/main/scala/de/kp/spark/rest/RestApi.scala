@@ -262,6 +262,12 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        * ../get/decision/feature
        */
       case "decision" => doRequest(ctx,"decision","get:decision")
+      /*
+       * Request to get an intent prediction for a (series of) user
+       * states; the request is mapped into the internal 'intent'
+       * service
+       */
+       case "intent" => doRequest(ctx,"intent","get")     
 	  /*
 	   * Request to get outliers with respect to features or states;
 	   * the request is mapped onto the internal 'outlier' service
@@ -333,6 +339,12 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        * is selected, i.e. for features this is RF
        */
       case "decision" => doRequest(ctx,"decision","train")
+      /*
+       * Request to build an intent model with respect to states;
+       * the requestor has to make sure that the appropriate algorithm
+       * is selected, i.e. MARKOV or HIDDEN_MARKOV
+       */
+      case "intent" => doRequest(ctx,"intent","train")
 	  /*
 	   * Request to train outlier with respect to features or states; 
 	   * the requestor has to make sure that the appropriate algorithm 
@@ -367,6 +379,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	   * model
 	   */
 	  case "decision" => doRequest(ctx,"decision","status")
+	  /*
+	   * Request to retrieve the status of training (or mining) an intent
+	   * model
+	   */
+	  case "intent" => doRequest(ctx,"intent","status")
 	  /*
 	   * Request to retrieve the status of training (or mining) an outlier
 	   * model

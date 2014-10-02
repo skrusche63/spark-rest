@@ -9,7 +9,10 @@
 	<!-- Outlier Detection is governed by the Outlier Service -->
 	<service name="outlier">akka.tcp://outlier-server@127.0.0.1:2606/user/outlier-master</service>
 	
-	<!-- Decision is governed by the Decision Service -->
+	<!-- Decision Making is governed by the Decision Service -->
 	<service name="decision">akka.tcp://decision-server@127.0.0.1:2608/user/decision-master</service>
+	
+	<!-- Intent Recognition is governed by the Intent Service -->
+	<service name="intent">akka.tcp://intent-server@127.0.0.1:2610/user/intent-master</service>
 
 </services>
