@@ -10,5 +10,8 @@
 	
 	<!-- Outlier Detection is governed by the Outlier Service -->
 	<service name="outlier">akka.tcp://outlier-server@127.0.0.1:2606/user/outlier-master</service>
+	
+	<!-- Decision is governed by the Decision Service -->
+	<service name="decision">akka.tcp://decision-server@127.0.0.1:2608/user/decision-master</service>
 
 </services>

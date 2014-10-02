@@ -114,10 +114,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("action/get" / Segment) {segment => 
+    path("action/get" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"action",segment)
+	      ctx => doGet(ctx,"action",service,subject)
 	    }
 	  }
     }  ~ 
@@ -139,10 +139,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("content/get" / Segment) {segment => 
+    path("content/get" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"content",segment)
+	      ctx => doGet(ctx,"content",service,subject)
 	    }
 	  }
     }  ~ 
@@ -164,10 +164,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("feature/get" / Segment) {segment => 
+    path("feature/get" / Segment / Segment) {(service,subject) =>  
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"feature",segment)
+	      ctx => doGet(ctx,"feature",service,subject)
 	    }
 	  }
     }  ~ 
@@ -189,10 +189,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("product/get" / Segment) {segment => 
+    path("product/get" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"product",segment)
+	      ctx => doGet(ctx,"product",service,subject)
 	    }
 	  }
     }  ~ 
@@ -214,10 +214,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("state/get" / Segment) {segment => 
+    path("state/get" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"state",segment)
+	      ctx => doGet(ctx,"state",service,subject)
 	    }
 	  }
     }  ~ 
@@ -272,32 +272,92 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    
   }
 
-  private def doGet[T](ctx:RequestContext,concept:String,segment:String) = {
+  private def doGet[T](ctx:RequestContext,concept:String,service:String,subject:String) = {
 
-    segment match {
+    service match {
+      /*
+       * Request to get a decision for a certain feature set; 
+       * the request is mapped onto the internal 'decision' service
+       * 
+       * ../get/decision/feature
+       */
+      case "decision" => doRequest(ctx,"decision","get:decision")
 	  /*
-	   * Request to retrieve the relation models; this request is mapped 
-	   * onto the internal 'relation' service
+	   * Request to get outliers with respect to features or states;
+	   * the request is mapped onto the internal 'outlier' service
+	   * 
+	   * ../get/outlier/feature|state
 	   */
-	  case "relation" => doRequest(ctx,"rule","get:relation")
-	  /*
-	   * Request to retrieve the rule models; this request is mapped 
-	   * onto the internal 'rule' service
-	   */
-	  case "rule" => doRequest(ctx,"rule","get:rule")
+	  case "outlier" => doRequest(ctx,"outlier","get:outlier")
+
+	  case "rule" => {
+	    
+	    subject match {
+	      
+	      /*
+	       * Request to retrieve the relation models; this request is mapped 
+	       * onto the internal 'rule' service
+	       * 
+	       * ../get/rule/relations
+	       */
+	      case "relations" => doRequest(ctx,"rule","get:relation")
+	      /*
+	       * Request to retrieve the rule models; this request is mapped 
+	       * onto the internal 'rule' service
+	       * 
+	       * ../get/rule/rules
+	       */
+	      case "rules" => doRequest(ctx,"rule","get:rule")
+	      
+	      case _ => {}
+	      
+	    }
+
+	  }
+	  
+	  case "series" => {
+	    
+	    subject match {
+	      /*
+	       * Request to get detected patterns from series analysis;
+	       * the request is mapped onto the internal 'series' service
+	       * 
+	       * ../get/series/patterns
+	       */
+	      case "patterns" => doRequest(ctx,"series","get:pattern")
+	      /*
+	       * Request to get detected rules from series analysis;
+	       * the request is mapped onto the internal 'series' service
+	       * 
+	       * ../get/series/rules
+	       */
+	      case "rules" => doRequest(ctx,"series","get:rule")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
 
 	  case _ => {}
 	  
     }
     
   }
-  private def doTrain[T](ctx:RequestContext,concept:String,segment:String) = {
+  private def doTrain[T](ctx:RequestContext,concept:String,service:String) = {
 
-    segment match {
+    service match {
+      /*
+       * Request to build a decision model with respect to features; 
+       * the requestor has to make sure that the appropriate algorithm 
+       * is selected, i.e. for features this is RF
+       */
+      case "decision" => doRequest(ctx,"decision","train")
 	  /*
-	   * Request to train outlier with respect to features; the requestor
-	   * has to make sure that the appropriate algorithm is selected, i.e.
-	   * for features this is KMeans and for states this is MARKOV
+	   * Request to train outlier with respect to features or states; 
+	   * the requestor has to make sure that the appropriate algorithm 
+	   * is selected, i.e.for features this is KMeans and for states 
+	   * this is MARKOV
 	   */
 	  case "outlier" => doRequest(ctx,"outlier","train")
 	  /*
@@ -319,9 +379,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   
   }
 
-  private def doStatus[T](ctx:RequestContext,concept:String,segment:String) = {
+  private def doStatus[T](ctx:RequestContext,concept:String,service:String) = {
 
-    segment match {
+    service match {
+	  /*
+	   * Request to retrieve the status of training (or mining) a decision
+	   * model
+	   */
+	  case "decision" => doRequest(ctx,"decision","status")
 	  /*
 	   * Request to retrieve the status of training (or mining) an outlier
 	   * model
