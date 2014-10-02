@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,InsightMaster,PredictMaster,SearchMaster,StatusMaster,TrainMaster}
+import de.kp.spark.rest.actor.{EventMaster,InsightMaster,FindMaster,StatusMaster,TrainMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -40,30 +40,17 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   
   override def actorRefFactory:ActorSystem = system
   
-  /* Event master actor */
-  val eventMaster = system.actorOf(Props[EventMaster], name="event-master")
-  
   /* 
    * The master actor that handles all insight requests 
    */
   val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
   
-  /* 
-   * The master actor that handles all train related post requests 
-   */
-  val trainer = system.actorOf(Props[TrainMaster], name="train-master")
+  val finder = system.actorOf(Props[FindMaster], name="find-master")
 
-  /*
-   * The master actor that handles all (model) retrieval related post requests 
-   */
-  val finder = system.actorOf(Props[PredictMaster], name="find-master")
-  /*
-   * The master actor that handles all status related post requests 
-   */
   val monitor = system.actorOf(Props[StatusMaster], name="status-master")
+  val tracker = system.actorOf(Props[EventMaster], name="event-master")
 
-  /* Search master actor */
-  val searchMaster = system.actorOf(Props[SearchMaster], name="search-master")
+  val trainer = system.actorOf(Props[TrainMaster], name="train-master")
  
   def start() {
     RestService.start(routes,system,host,port)
@@ -96,10 +83,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("insight") {
+    path("query") {
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => insight(ctx)
+	      ctx => doQuery(ctx)
 	    }
 	  }
     }  ~ 
@@ -227,13 +214,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	      ctx => doStatus(ctx,"state",segment)
 	    }
 	  }
-    }  ~ 
-    path("search") {
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => search(ctx)
-	    }
-	  }
     }
 
   }
@@ -255,12 +235,12 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    val response = ask(eventMaster,request).mapTo[EventResponse] 
+    val response = ask(tracker,request).mapTo[EventResponse] 
     ctx.complete(response)
     
   }
 
-  private def insight[T](ctx:RequestContext,service:String="insight") = {
+  private def doQuery[T](ctx:RequestContext,service:String="insight") = {
      
     val request = new InsightRequest(service,getRequest(ctx))
       
@@ -419,19 +399,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val response = ask(master(task),request).mapTo[ServiceResponse] 
     ctx.complete(response)
     
-  }
- 
-  private def search[T](ctx:RequestContext) = {
-     
-    val req = getRequest(ctx)
-    val message = new SearchMessage(req)
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
-    
-    val response = ask(searchMaster,message).mapTo[SearchResponse] 
-    ctx.complete(response)
-   
   }
 
   private def getHeaders(ctx:RequestContext):Map[String,String] = {

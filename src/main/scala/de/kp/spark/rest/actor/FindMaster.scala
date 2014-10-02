@@ -18,38 +18,58 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import akka.actor.{Actor,ActorLogging,ActorRef,Props}
 
-import de.kp.spark.rest.{ServiceRequest,ServiceResponse,ResponseStatus}
-import de.kp.spark.rest.context.PredictContext
+import akka.pattern.ask
+import akka.util.Timeout
 
-class PredictActor() extends Actor with ActorLogging {
+import akka.actor.{OneForOneStrategy, SupervisorStrategy}
+import akka.routing.RoundRobinRouter
 
-  implicit val ec = context.dispatcher
+import de.kp.spark.rest.{Configuration,ServiceRequest,ServiceResponse,ResponseStatus}
+
+import scala.concurrent.duration.DurationInt
+
+class FindMaster extends Actor with ActorLogging {
+  
+  /* Load configuration for routers */
+  val (time,retries,workers) = Configuration.router   
+  
+  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
+    case _ : Exception => SupervisorStrategy.Restart
+  }
+
+  val router = context.actorOf(Props(new FindActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     
     case req:ServiceRequest => {
       
-      val origin = sender
-      val response = PredictContext.send(req).mapTo[ServiceResponse]
+      implicit val ec = context.dispatcher
+
+      val duration = Configuration.actor      
+      implicit val timeout:Timeout = DurationInt(duration).second
+	  	    
+	  val origin = sender
+      val response = ask(router, req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! failure(req)	 	      
+        case result => origin ! failure(req)      
 	  }
       
     }
+    case _ => {}
     
   }
-  
+   
   private def failure(req:ServiceRequest):ServiceResponse = {
     
     val uid = req.data("uid")    
     new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
   
   }
-
+ 
 }
