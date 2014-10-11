@@ -23,9 +23,9 @@ package de.kp.spark.rest
  * engagement. Any tracking message that provides a JSON data format 
  * is capable to be sent to the event
  */
-case class EventRequest(topic:String,data:Map[String,String])
+case class TrackRequest(topic:String,data:Map[String,String])
 
-case class EventResponse(status:String)
+case class TrackResponse(status:String)
 
 /*
  * Insight support: A common interface to send SQL-alike

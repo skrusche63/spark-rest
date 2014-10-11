@@ -26,31 +26,40 @@ import akka.util.Timeout
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.{Configuration,EventRequest,EventResponse,ResponseStatus}
-import de.kp.spark.rest.event.KafkaContext
+import de.kp.spark.rest.{Configuration,TrackRequest,TrackResponse,ResponseStatus}
+import de.kp.spark.rest.track.{ElasticContext,KafkaContext}
 
 import scala.concurrent.duration.DurationInt
 
-class EventMaster extends Actor with ActorLogging {
+class TrackMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
-
-  /* Load configuration for kafka */
-  val brokers = Configuration.kafka
-  
-  val kafkaConfig = Map("kafka.brokers" -> brokers)
-  val kc = new KafkaContext(kafkaConfig)
   
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val router = context.actorOf(Props(new KafkaActor(kc)).withRouter(RoundRobinRouter(workers)))
+  val (elastic,kafka) = Configuration.tracking
+  val router = if (elastic) {
+    
+    val ec = new ElasticContext()
+    context.actorOf(Props(new ElasticActor(ec)).withRouter(RoundRobinRouter(workers)))
+    
+  } else {
+      /* Load configuration for kafka */
+      val brokers = Configuration.kafka
+  
+      val kafkaConfig = Map("kafka.brokers" -> brokers)
+      val kc = new KafkaContext(kafkaConfig)
+
+      context.actorOf(Props(new KafkaActor(kc)).withRouter(RoundRobinRouter(workers)))
+    
+  }
 
   def receive = {
     
-    case req:EventRequest => {
+    case req:TrackRequest => {
       
       implicit val ec = context.dispatcher
 
@@ -58,13 +67,13 @@ class EventMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(router, req).mapTo[EventResponse]
+      val response = ask(router, req).mapTo[TrackResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new EventResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! new TrackResponse(ResponseStatus.FAILURE)	      
 	  }
       
     }

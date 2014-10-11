@@ -1,4 +1,4 @@
-package de.kp.spark.rest.event
+package de.kp.spark.rest.track
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -23,7 +23,7 @@ import kafka.message.DefaultCompressionCodec
 
 import java.util.{Properties,UUID}
 
-import de.kp.spark.rest.EventRequest
+import de.kp.spark.rest.TrackRequest
 
 class KafkaContext(settings:Map[String,String]) {
 
@@ -99,12 +99,12 @@ class KafkaContext(settings:Map[String,String]) {
   props.put("client.id",clientId.toString)
   props.put("serializer.class", "de.kp.spark.rest.kafka.EventEncoder")
 
-  private val producer = new Producer[String, EventRequest](new ProducerConfig(props))
+  private val producer = new Producer[String, TrackRequest](new ProducerConfig(props))
 
-  def send(req:EventRequest) {
+  def send(req:TrackRequest) {
     
     val (topic,message) = (req.topic,req)    
-    producer.send(new KeyedMessage[String, EventRequest](topic, message))
+    producer.send(new KeyedMessage[String,TrackRequest](topic, message))
     
   }
   

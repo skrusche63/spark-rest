@@ -56,6 +56,17 @@ object Configuration {
 
   }
 
+  def tracking():(Boolean,Boolean) = {
+  
+    val cfg = config.getConfig("tracking")
+    
+    val elastic = cfg.getBoolean("elastic.enabled")  
+    val kafka   = cfg.getBoolean("kafka.enabled")  
+    
+    (elastic,kafka)
+
+  }
+
   def web():(String,Int) = {
       
     val cfg = config.getConfig("web")

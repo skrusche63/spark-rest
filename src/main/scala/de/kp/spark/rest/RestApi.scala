@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,FindMaster,InsightMaster,MetaMaster,StatusMaster,TrainMaster}
+import de.kp.spark.rest.actor.{FindMaster,InsightMaster,MetaMaster,StatusMaster,TrackMaster,TrainMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -50,7 +50,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   val monitor = system.actorOf(Props[StatusMaster], name="status-master")
   val registrar = system.actorOf(Props[MetaMaster], name="meta-master")
   
-  val tracker = system.actorOf(Props[EventMaster], name="event-master")
+  val tracker = system.actorOf(Props[TrackMaster], name="event-master")
   val trainer = system.actorOf(Props[TrainMaster], name="train-master")
  
   def start() {
@@ -65,22 +65,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
           ctx => admin(ctx)
-	    }
-	  }
-    }  ~ 
-    path("event" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      segment match {
-	        case "transaction" => {
-	          /*
-	           * Request to collect transaction events; this request
-	           * is mapped onto the internal 'transaction' topic as
-	           * it is collected as contribution to a transaction db
-	           */
-	          ctx => event(ctx,"transaction")
-	        }
-	      }
 	    }
 	  }
     }  ~ 
@@ -99,6 +83,19 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doMetadata(ctx,segment)
+	    }
+	  }
+    }  ~ 
+    /*
+     * This request provides trackable information either as an event 
+     * or as a feature; an event refers to a certain 'item', e.g. an 
+     * ecommerce product or service , and a feature refers to a specific
+     * dataset
+     */
+    path("track" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrack(ctx, segment)
 	    }
 	  }
     }  ~ 
@@ -237,20 +234,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
      * Not implemented yet
      */
   }
-  /**
-   * Common method to handle all events sent to the REST API
-   */
-  private def event[T](ctx:RequestContext,topic:String) = {
-    
-    val request = new EventRequest(topic,getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
-    
-    val response = ask(tracker,request).mapTo[EventResponse] 
-    ctx.complete(response)
-    
-  }
   
   /**
    * Access 'meta' service to register metadata description
@@ -267,6 +250,20 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val response = ask(insightMaster,request).mapTo[InsightResponse] 
     ctx.complete(response)
    
+  }
+  /**
+   * Common method to handle all track requests sent to the REST API
+   */
+  private def doTrack[T](ctx:RequestContext,topic:String) = {
+    
+    val request = new TrackRequest(topic,getRequest(ctx))
+      
+    val duration = Configuration.actor      
+    implicit val timeout:Timeout = DurationInt(duration).second
+    
+    val response = ask(tracker,request).mapTo[TrackResponse] 
+    ctx.complete(response)
+    
   }
 
   private def doGet[T](ctx:RequestContext,concept:String,service:String,subject:String) = {

@@ -20,21 +20,28 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{TrackRequest,TrackResponse,ResponseStatus}
-import de.kp.spark.rest.track.KafkaContext
+import de.kp.spark.rest.context.MetaContext
 
-class KafkaActor(kc:KafkaContext) extends Actor with ActorLogging {
+class MetaActor() extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
 
   def receive = {
     
-    case req:TrackRequest => {
+    case req:String => {
       
       val origin = sender
-      origin ! new TrackResponse(ResponseStatus.SUCCESS)
+      val response = MetaContext.send(req).mapTo[String]
       
-      kc.send(req)
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case throwable => origin ! throwable.getMessage()	 	      
+	  }
       
     }
     
   }
+
 }

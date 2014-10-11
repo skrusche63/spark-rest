@@ -21,9 +21,9 @@ package de.kp.spark.rest.actor
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.rest.{TrackRequest,TrackResponse,ResponseStatus}
-import de.kp.spark.rest.track.KafkaContext
+import de.kp.spark.rest.track.{ElasticContext,EventUtils}
 
-class KafkaActor(kc:KafkaContext) extends Actor with ActorLogging {
+class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
 
   def receive = {
     
@@ -31,10 +31,27 @@ class KafkaActor(kc:KafkaContext) extends Actor with ActorLogging {
       
       val origin = sender
       origin ! new TrackResponse(ResponseStatus.SUCCESS)
-      
-      kc.send(req)
+
+      val topic = req.topic
+      topic match {
+        
+        case "event" => registerEvent(req.data)
+        
+        case "feature" => registerFeature(req.data)
+
+      }
       
     }
+    
+  }
+  
+  private def registerEvent(params:Map[String,String]) {
+    
+    val(index,mapping,builder,source) = EventUtils.prepare(params)
+    
+  }
+  
+  private def registerFeature(params:Map[String,String]) {
     
   }
 }

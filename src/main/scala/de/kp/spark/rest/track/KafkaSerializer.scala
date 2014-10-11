@@ -1,4 +1,4 @@
-package de.kp.spark.rest.event
+package de.kp.spark.rest.track
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -28,24 +28,24 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
-import de.kp.spark.rest.EventRequest
+import de.kp.spark.rest.TrackRequest
 
-class EventDecoder(props: VerifiableProperties) extends Decoder[EventRequest] {
+class TrackDecoder(props: VerifiableProperties) extends Decoder[TrackRequest] {
     
   implicit val formats = Serialization.formats(NoTypeHints)
   
-  def fromBytes(bytes: Array[Byte]): EventRequest = {
-    read[EventRequest](new String(bytes, Charsets.UTF_8))
+  def fromBytes(bytes: Array[Byte]): TrackRequest = {
+    read[TrackRequest](new String(bytes, Charsets.UTF_8))
   }
 
 }
 
-class EventEncoder(props: VerifiableProperties) extends Encoder[EventRequest] {
+class TrackEncoder(props: VerifiableProperties) extends Encoder[TrackRequest] {
     
   implicit val formats = Serialization.formats(NoTypeHints)
   
-  def toBytes(message: EventRequest): Array[Byte] = {
-    write[EventRequest](message).getBytes(Charsets.UTF_8)
+  def toBytes(message: TrackRequest): Array[Byte] = {
+    write[TrackRequest](message).getBytes(Charsets.UTF_8)
   }
   
 }
