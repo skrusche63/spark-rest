@@ -31,7 +31,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{EventMaster,InsightMaster,FindMaster,StatusMaster,TrainMaster}
+import de.kp.spark.rest.actor.{EventMaster,FindMaster,InsightMaster,MetaMaster,StatusMaster,TrainMaster}
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -48,8 +48,9 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   val finder = system.actorOf(Props[FindMaster], name="find-master")
 
   val monitor = system.actorOf(Props[StatusMaster], name="status-master")
+  val registrar = system.actorOf(Props[MetaMaster], name="meta-master")
+  
   val tracker = system.actorOf(Props[EventMaster], name="event-master")
-
   val trainer = system.actorOf(Props[TrainMaster], name="train-master")
  
   def start() {
@@ -87,6 +88,17 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doQuery(ctx)
+	    }
+	  }
+    }  ~ 
+    /*
+     * This request provides a metadata specification that has to be
+     * registered in a Redis instance by the 'meta' service
+     */
+    path("metadata" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doMetadata(ctx,segment)
 	    }
 	  }
     }  ~ 
@@ -239,6 +251,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
     
   }
+  
+  /**
+   * Access 'meta' service to register metadata description
+   */
+  private def doMetadata[T](ctx:RequestContext,service:String) = doMetaRequest(ctx,service)
 
   private def doQuery[T](ctx:RequestContext,service:String="insight") = {
      
@@ -417,6 +434,18 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
     
   }
+  
+  private def doMetaRequest[T](ctx:RequestContext,target:String) = {
+     
+    val request = getBodyAsString(ctx)
+      
+    val duration = Configuration.actor      
+    implicit val timeout:Timeout = DurationInt(duration).second
+    
+    val response = ask(registrar,request).mapTo[String] 
+    ctx.complete(response)
+    
+  }
 
   private def getHeaders(ctx:RequestContext):Map[String,String] = {
     
@@ -431,7 +460,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
  
-  private def getBody(ctx:RequestContext):Map[String,String] = {
+  private def getBodyAsMap(ctx:RequestContext):Map[String,String] = {
    
     val httpRequest = ctx.request
     val httpEntity  = httpRequest.entity    
@@ -444,11 +473,24 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     body.asInstanceOf[Map[String,String]]
     
   }
+  /**
+   * This method returns the 'raw' body provided with a Http request;
+   * it is e.g. used to access the meta service to register metadata
+   * specifications
+   */
+  private def getBodyAsString(ctx:RequestContext):String = {
+   
+    val httpRequest = ctx.request
+    val httpEntity  = httpRequest.entity    
+
+    httpEntity.data.asString
+    
+  }
   
   private def getRequest(ctx:RequestContext):Map[String,String] = {
 
     val headers = getHeaders(ctx)
-    val body = getBody(ctx)
+    val body = getBodyAsMap(ctx)
     
     headers ++ body
     

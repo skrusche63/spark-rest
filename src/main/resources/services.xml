@@ -1,18 +1,33 @@
 <services>
+
+    <!-- 
+    The MetaService collects XML based metadata description that are used by the 
+    respective engines to access supported data sources; e.g. for the decision
+    service a metadata description specifies which fields have to be taken into
+    account and which of them are categorical or numerical fields
+     -->
+	<service name="meta">akka.tcp://meta-server@127.0.0.1:2602/user/meta-master</service>
 	
-	<!-- Rule Analysis is governed by the ARules Service -->
-	<service name="rule">akka.tcp://arules-server@127.0.0.1:2602/user/arules-master</service>
+	<!-- 
+	The RuleService discovers hidden relations in large-scale databases; the respective
+	result may be used by find hidden aspects about customer and products and may help
+	e.g. help marketers to improve targeting 
+	-->
+	<service name="rule">akka.tcp://arules-server@127.0.0.1:2604/user/arules-master</service>
 
     <!--  Series Analysis is governed by the FSM Service -->
-	<service name="series">akka.tcp://fsm-server@127.0.0.1:2604/user/fsm-master</service>
+	<service name="series">akka.tcp://fsm-server@127.0.0.1:2606/user/fsm-master</service>
 	
 	<!-- Outlier Detection is governed by the Outlier Service -->
-	<service name="outlier">akka.tcp://outlier-server@127.0.0.1:2606/user/outlier-master</service>
+	<service name="outlier">akka.tcp://outlier-server@127.0.0.1:2608/user/outlier-master</service>
 	
 	<!-- Decision Making is governed by the Decision Service -->
-	<service name="decision">akka.tcp://decision-server@127.0.0.1:2608/user/decision-master</service>
+	<service name="decision">akka.tcp://decision-server@127.0.0.1:2610/user/decision-master</service>
 	
 	<!-- Intent Recognition is governed by the Intent Service -->
-	<service name="intent">akka.tcp://intent-server@127.0.0.1:2610/user/intent-master</service>
+	<service name="intent">akka.tcp://intent-server@127.0.0.1:2612/user/intent-master</service>
+
+	<!-- Predictions are governed by the Factorization Machine Service -->
+	<service name="prediction">akka.tcp://fm-server@127.0.0.1:2614/user/fm-master</service>
 
 </services>
