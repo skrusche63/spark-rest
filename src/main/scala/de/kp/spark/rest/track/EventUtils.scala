@@ -20,6 +20,9 @@ package de.kp.spark.rest.track
 
 import org.elasticsearch.common.xcontent.{XContentBuilder,XContentFactory}
 
+import scala.collection.JavaConversions._
+import scala.collection.mutable.HashMap
+
 object EventUtils {
   /*
    * Definition of supported event parameters
@@ -32,23 +35,22 @@ object EventUtils {
   val GROUP_FIELD:String = "group"
   val ITEM_FIELD:String  = "item"
 
-  def prepare(params:Map[String,String]):(String,String,XContentBuilder,Map[String,Any]) = {
+  def prepare(params:Map[String,String]):(String,String,XContentBuilder,java.util.Map[String,Object]) = {
 
     val index = params("index")
     val mapping = params("type")
     
     val builder = createBuilder(mapping)
-            
-    val source = Map(
-      SITE_FIELD -> params(SITE_FIELD),
-      USER_FIELD -> params(USER_FIELD),
+    
+    val source = HashMap.empty[String,String]
+    
+    source += SITE_FIELD -> params(SITE_FIELD)
+    source += USER_FIELD -> params(USER_FIELD)
       
-      TIMESTAMP_FIELD -> params(TIMESTAMP_FIELD).toLong,
+    source += TIMESTAMP_FIELD -> params(TIMESTAMP_FIELD)
  
-      GROUP_FIELD -> params(GROUP_FIELD),
-      ITEM_FIELD -> params(ITEM_FIELD).toInt
-
-    )
+    source += GROUP_FIELD -> params(GROUP_FIELD)
+    source += ITEM_FIELD -> params(ITEM_FIELD)
     
     (index,mapping,builder,source)
     

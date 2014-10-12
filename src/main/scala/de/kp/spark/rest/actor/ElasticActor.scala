@@ -48,6 +48,7 @@ class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
   private def registerEvent(params:Map[String,String]) {
     
     val(index,mapping,builder,source) = EventUtils.prepare(params)
+    ec.register(index,mapping,builder,source)
     
   }
   

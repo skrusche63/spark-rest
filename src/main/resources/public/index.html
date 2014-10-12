@@ -2,21 +2,82 @@
 <html>
   <head>
     <title>Predictive Engines</title>
+     <!-- jquery library -->
      <script src="js/jquery-1.9.0.min.js" type="text/javascript"></script>    
+ 
+     <!-- bootstrap stylesheet -->
+     <link rel="stylesheet" media="screen" href="css/bootstrap.min.css">
+     <link rel="stylesheet" media="screen" href="css/dashboard.css">
+     
   </head>
   <body>
-    <div>
-      Welcome
+    
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="">K&P Insight</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+          
+          <!-- search support -->
+          <div id="searcharea">
+            <form id="searchbox" class="navbar-form navbar-right">
+              <input name="q" type="text" class="form-control" placeholder="Search...">
+            </form>
+            <div id="searchresult" class="dropdown">
+            </div>
+          </div>
+        
+        </div>
+      </div>
     </div>
-    <div id="actor-status">
-    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- sidebar -->
+        <div class="col-sm-3 col-md-2 sidebar">
+          
+          <ul class="nav nav-sidebar">
+            <li><a class="active" page="actors" href="#">Actors</a></li>
+            <li><a page="engines" href="#">Engines</a></li>
+            <li><a page="models" href="#">Models</a></li>
+            <li><a page="status" href="#">Status</a></li>
+          </ul>
+        
+        </div>
+        
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          
+          <div id="kup-container">
+          
+            <h1 class="page-header">Actors</h1>
+            
+            <h2 class="sub-header">Actor Status</h2>
+            <div id="actor-status" class="table-responsive">
+             </div>
+          </div>
+        </div>
+      </div>
+	</div>
+    
 	<script>
 	  
        $(document).ready(function(){	
          
-         doActorStatus();
+         doActors();
          
-         function doActorStatus() {
+         function doActors() {
 
             var request = '{}';
              
@@ -28,28 +89,48 @@
                 dataType: "json",
                 async: false,
                 success: function(response) {
-                  doRenderStatus(response);
+                  doRenderActors(response);
                 }
             });
           
          }
 
-         function doRenderStatus(response) {
+         function doRenderActors(response) {
           	
-        	var div_res = $('#actor-status');
+        	var div_res = $("#actor-status");
         	div_res.empty();
         	  
-        	var table_res = $('<table/>');
+        	var table_res = $("<table/>");
+        	table_res.addClass("table table-striped");
+		    
 		    div_res.append(table_res);
-           
+            
+            // header
+            var thead_res = $("<thead>");
+            table_res.append(thead_res);
+            
+            var tr_res = $("<tr>");
+            thead_res.append(tr_res);
+            
+            tr_res.append($("<th>#</th>"));
+            tr_res.append($("<th>Name</th>"));
+ 
+            tr_res.append($("<th>Date</th>"));
+            tr_res.append($("<th>Status</th>"));
+            
+            // body
+            var tbody_res = $("<tbody/>");
+            table_res.append(tbody_res);
+            
             var records = response.items;
             for (var i=0; i < records.length; i++) {
               
               var record = records[i];
               
-              var row_res = $('<tr/>');
-              table_res.append(row_res);
+              var row_res = $("<tr/>");
+              tbody_res.append(row_res);
   
+              row_res.append($("<td>" + (i+1) + "</td>"));            
               row_res.append($("<td>" + record.name + "</td>"));            
               row_res.append($("<td>" + record.date + "</td>"));            
               row_res.append($("<td>" + record.status + "</td>"));            
@@ -57,8 +138,58 @@
             }
            
          }
+          
+         function loadSubpage(url) {
+
+            $.ajax({
+              type:"GET",
+              url:url,
+              contentType: "text/html; charset=utf-8",
+              success: function(response) {
+                var container = $('#hybris-container');
+                container.empty();
+
+                container.html(response);
+
+              },
+                error: function(response) {
+                  doError(response) 
+              }
+            });
+        	  
+         }
+          
+         function doError(response) {
+        	alert("error")
+         }
+ 
+         $('.nav-sidebar li a').on('click', function(e) {
+
+           	 e.preventDefault();
+            
+        	 $('.dropdown-menu').hide();          	 
+             $('.nav-sidebar li a.active').removeClass('active');
+ 
+         	 var url = null;
+         	
+         	 var page = $(this).attr('page');
+             alert(page);
+                    	
+        	 $(this).addClass('active');
+        	 $(this).blur();
+ 	        
+         });
+          
+         $('#searchbox input').bind('keypress', function(e) {
+             if (e.which == '13') {
+        	     e.preventDefault();
+        	  
+        	     $('.dropdown-menu').hide();
+              }
+         
+         });
              
-        });
+       });
 	  
     </script>    
   </body>

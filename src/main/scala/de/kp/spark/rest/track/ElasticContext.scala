@@ -31,7 +31,10 @@ import org.elasticsearch.action.index.IndexRequest.OpType
 import org.elasticsearch.indices.IndexAlreadyExistsException
 
 import org.elasticsearch.common.logging.Loggers
-import org.elasticsearch.common.xcontent.XContentBuilder
+import org.elasticsearch.common.xcontent.{XContentBuilder,XContentFactory}
+
+import org.elasticsearch.client.Requests
+import scala.collection.JavaConversions._
 
 class ElasticContext {
 
@@ -46,7 +49,7 @@ class ElasticContext {
 
   private val DEFAULT_HEALTH_REQUEST_TIMEOUT:String = "30s"
   
-  def register(index:String,mapping:String,builder:XContentBuilder,source:Map[String,Any]) {
+  def register(index:String,mapping:String,builder:XContentBuilder,source:java.util.Map[String,Object]) {
     
     val responseListener = new ListenerUtils.OnIndexResponseListener[IndexResponse]() {
       override def onResponse(response:IndexResponse) {
@@ -56,7 +59,7 @@ class ElasticContext {
          */
         val msg = String.format("""Successful registration for: %s""", source.toString)
         logger.info(msg)
-
+        
       }      
     }
 		
@@ -67,13 +70,17 @@ class ElasticContext {
 	     * the index and / or the respective mapping may not exists
 	     */
 	    sleep(t)
+	    println("Failure: " + t.getMessage)
 	    indexExists(index,mapping,builder,source)
 	      
 	  }
 	}
         
     /* Update index operation */
-    client.prepareIndex(index, mapping).setSource(source).setRefresh(true).setOpType(OpType.INDEX)
+    val content = XContentFactory.contentBuilder(Requests.INDEX_CONTENT_TYPE)
+    content.map(source)
+	
+    client.prepareIndex(index, mapping).setSource(content).setRefresh(true).setOpType(OpType.INDEX)
       .execute(ListenerUtils.onIndex(responseListener, failureListener))
     
   }
@@ -82,7 +89,7 @@ class ElasticContext {
     if (node != null) node.close()
   }
   
-  private def indexExists(index:String,mapping:String,builder:XContentBuilder,source:Map[String,Any]) {
+  private def indexExists(index:String,mapping:String,builder:XContentBuilder,source:java.util.Map[String,Object]) {
         
     try {
       
@@ -116,7 +123,7 @@ class ElasticContext {
     
   }
   
-  private def createIndex(index:String,mapping:String,builder:XContentBuilder,source:Map[String,Any]) {
+  private def createIndex(index:String,mapping:String,builder:XContentBuilder,source:java.util.Map[String,Object]) {
     
     try {
       
@@ -148,7 +155,7 @@ class ElasticContext {
   
   }
   
-  private def createMapping(index:String,mapping:String,builder:XContentBuilder,source:Map[String,Any]) {
+  private def createMapping(index:String,mapping:String,builder:XContentBuilder,source:java.util.Map[String,Object]) {
 
     try {
         
