@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Predictive Engines</title>
+     <script src="js/jquery-1.9.0.min.js" type="text/javascript"></script>    
+  </head>
+  <body>
+    <div>
+      Welcome
+    </div>
+    <div id="actor-status">
+    </div>
+	<script>
+	  
+       $(document).ready(function(){	
+         
+         doActorStatus();
+         
+         function doActorStatus() {
+
+            var request = '{}';
+             
+            $.ajax({
+                type:"POST",
+                url:"http://localhost:9000/admin/actors",
+                data:request,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                success: function(response) {
+                  doRenderStatus(response);
+                }
+            });
+          
+         }
+
+         function doRenderStatus(response) {
+          	
+        	var div_res = $('#actor-status');
+        	div_res.empty();
+        	  
+        	var table_res = $('<table/>');
+		    div_res.append(table_res);
+           
+            var records = response.items;
+            for (var i=0; i < records.length; i++) {
+              
+              var record = records[i];
+              
+              var row_res = $('<tr/>');
+              table_res.append(row_res);
+  
+              row_res.append($("<td>" + record.name + "</td>"));            
+              row_res.append($("<td>" + record.date + "</td>"));            
+              row_res.append($("<td>" + record.status + "</td>"));            
+              
+            }
+           
+         }
+             
+        });
+	  
+    </script>    
+  </body>
+</html>

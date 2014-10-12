@@ -23,19 +23,11 @@ package de.kp.spark.rest
  * engagement. Any tracking message that provides a JSON data format 
  * is capable to be sent to the event
  */
-case class TrackRequest(topic:String,data:Map[String,String])
-
-case class TrackResponse(status:String)
 
 /*
  * Insight support: A common interface to send SQL-alike
  * query statements to get more insight from ingested data
  */
-case class InsightRequest(service:String,data:Map[String,String])
-case class InsightResponse(status:String)
-
-case class ServiceRequest(service:String,task:String,data:Map[String,String])
-case class ServiceResponse(service:String,task:String,data:Map[String,String],status:String)
 
 /*
  * Search support
@@ -43,10 +35,3 @@ case class ServiceResponse(service:String,task:String,data:Map[String,String],st
 case class SearchMessage(data:Map[String,String])
 
 case class SearchResponse(status:String)
-
-object ResponseStatus {
-  
-  val FAILURE = "failure"
-  val SUCCESS = "success"
-  
-}

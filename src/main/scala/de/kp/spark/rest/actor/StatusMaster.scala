@@ -18,37 +18,26 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging,ActorRef,Props}
+import akka.actor.ActorLogging
 
 import akka.pattern.ask
 import akka.util.Timeout
 
-import akka.actor.{OneForOneStrategy, SupervisorStrategy}
-import akka.routing.RoundRobinRouter
-
-import de.kp.spark.rest.{Configuration,ServiceRequest,ServiceResponse,ResponseStatus}
+import de.kp.spark.rest.model._
 
 import scala.concurrent.duration.DurationInt
 
-class StatusMaster extends Actor with ActorLogging {
+class StatusMaster extends MonitoredActor with ActorLogging {
   
-  /* Load configuration for routers */
-  val (time,retries,workers) = Configuration.router   
-  
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
-    case _ : Exception => SupervisorStrategy.Restart
-  }
-
-  val router = context.actorOf(Props(new StatusActor()).withRouter(RoundRobinRouter(workers)))
-
   def receive = {
+    /*
+     * Message sent by the scheduler to track the 'heartbeat' of this actor
+     */
+    case req:AliveMessage => register("StatusMaster")
     
     case req:ServiceRequest => {
       
-      implicit val ec = context.dispatcher
-
-      val duration = Configuration.actor      
-      implicit val timeout:Timeout = DurationInt(duration).second
+      implicit val timeout:Timeout = DurationInt(time).second
 	  	    
 	  val origin = sender
       val response = ask(router, req).mapTo[ServiceResponse]
@@ -63,13 +52,6 @@ class StatusMaster extends Actor with ActorLogging {
     }
     case _ => {}
     
-  }
-   
-  private def failure(req:ServiceRequest):ServiceResponse = {
-    
-    val uid = req.data("uid")    
-    new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
-  
   }
  
 }

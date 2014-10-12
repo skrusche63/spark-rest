@@ -18,20 +18,31 @@ package de.kp.spark.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import java.util.Date
+
 import akka.actor.{ActorRef,ActorSystem,Props}
 import akka.pattern.ask
 
 import akka.util.Timeout
 
 import spray.http.StatusCodes._
+import spray.httpx.encoding.Gzip
+import spray.httpx.marshalling.Marshaller
+
 import spray.routing.{Directives,HttpService,RequestContext,Route}
+import spray.routing.directives.EncodingDirectives
+import spray.routing.directives.CachingDirectives
 
 import scala.concurrent.{ExecutionContext}
+import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
 import de.kp.spark.rest.actor.{FindMaster,InsightMaster,MetaMaster,StatusMaster,TrackMaster,TrainMaster}
+import de.kp.spark.rest.cache.ActorMonitor
+
+import de.kp.spark.rest.model._
 
 class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
@@ -39,32 +50,36 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   import de.kp.spark.rest.RestJsonSupport._
   
   override def actorRefFactory:ActorSystem = system
-  
-  /* 
-   * The master actor that handles all insight requests 
-   */
-  val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
-  
-  val finder = system.actorOf(Props[FindMaster], name="find-master")
 
-  val monitor = system.actorOf(Props[StatusMaster], name="status-master")
-  val registrar = system.actorOf(Props[MetaMaster], name="meta-master")
+  val (heartbeat,time) = Configuration.actor      
+  private val RouteCache = CachingDirectives.routeCache(1000,16,Duration.Inf,Duration("30 min"))
   
-  val tracker = system.actorOf(Props[TrackMaster], name="event-master")
-  val trainer = system.actorOf(Props[TrainMaster], name="train-master")
+//  /* 
+//   * The master actor that handles all insight requests 
+//   */
+//  val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
+//  
+  val finder = system.actorOf(Props[FindMaster], name="FindMaster")
+
+  val monitor = system.actorOf(Props[StatusMaster], name="StatusMaster")
+  val registrar = system.actorOf(Props[MetaMaster], name="MetaMaster")
+  
+  val tracker = system.actorOf(Props[TrackMaster], name="TrackMaster")
+  val trainer = system.actorOf(Props[TrainMaster], name="TrainMaster")
  
   def start() {
     RestService.start(routes,system,host,port)
   }
+
   /*
    * The routes defines the different access channels this API supports
    */
   private def routes:Route = {
 
-    path("admin") {
+    path("admin" / Segment) {segment => 
 	  post {
 	    respondWithStatus(OK) {
-          ctx => admin(ctx)
+          ctx => doAdmin(ctx,segment)
 	    }
 	  }
     }  ~ 
@@ -223,16 +238,43 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	      ctx => doStatus(ctx,"state",segment)
 	    }
 	  }
+    }  ~ 
+    pathPrefix("web") {
+      /*
+       * 'web' is the prefix for static public content that is
+       * served from a web browser and provides a minimalistic
+       * web UI for this prediction server
+       */
+      implicit val actorContext = actorRefFactory
+      get {
+	    respondWithStatus(OK) {
+	      getFromResourceDirectory("public")
+	    }
+      }
     }
-
   }
   /**
    * Common method to handle all admin requests sent to the REST API
    */
-  private def admin[T](ctx:RequestContext) = {
-    /*
-     * Not implemented yet
-     */
+  private def doAdmin[T](ctx:RequestContext,task:String) = {
+
+    task match {
+      /*
+       * Retrieve status of all actors supported 
+       */
+      case "actors" => {
+        
+        val names = Seq("FindMaster","MetaMaster","StatusMaster","TrackMaster","TrainMaster")
+        val response = ActorMonitor.isAlive(names)
+        
+        ctx.complete(response)
+        
+      }
+      
+      case _ => ctx.complete("This task is not supported.")
+
+    }
+    
   }
   
   /**
@@ -242,13 +284,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 
   private def doQuery[T](ctx:RequestContext,service:String="insight") = {
      
-    val request = new InsightRequest(service,getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
+    val request = new InsightRequest(service,getRequest(ctx))      
+    implicit val timeout:Timeout = DurationInt(time).second
     
-    val response = ask(insightMaster,request).mapTo[InsightResponse] 
-    ctx.complete(response)
+//    val response = ask(insightMaster,request).mapTo[InsightResponse] 
+//    ctx.complete(response)
    
   }
   /**
@@ -257,9 +297,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   private def doTrack[T](ctx:RequestContext,topic:String) = {
     
     val request = new TrackRequest(topic,getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
+    implicit val timeout:Timeout = DurationInt(time).second
     
     val response = ask(tracker,request).mapTo[TrackResponse] 
     ctx.complete(response)
@@ -423,9 +461,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
      
     val request = new ServiceRequest(service,task,getRequest(ctx))
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
+    implicit val timeout:Timeout = DurationInt(time).second
     
     val response = ask(master(task),request).mapTo[ServiceResponse] 
     ctx.complete(response)
@@ -435,9 +471,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   private def doMetaRequest[T](ctx:RequestContext,target:String) = {
      
     val request = getBodyAsString(ctx)
-      
-    val duration = Configuration.actor      
-    implicit val timeout:Timeout = DurationInt(duration).second
+    implicit val timeout:Timeout = DurationInt(time).second
     
     val response = ask(registrar,request).mapTo[String] 
     ctx.complete(response)

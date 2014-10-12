@@ -20,7 +20,7 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{ServiceRequest,ServiceResponse,ResponseStatus}
+import de.kp.spark.rest.model._
 import de.kp.spark.rest.context.TrainContext
 
 class TrainActor extends Actor with ActorLogging {

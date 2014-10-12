@@ -23,7 +23,7 @@ import kafka.message.DefaultCompressionCodec
 
 import java.util.{Properties,UUID}
 
-import de.kp.spark.rest.TrackRequest
+import de.kp.spark.rest.model._
 
 class KafkaContext(settings:Map[String,String]) {
 

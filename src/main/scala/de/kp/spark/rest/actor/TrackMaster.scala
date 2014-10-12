@@ -18,30 +18,23 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging,ActorRef,Props}
+import akka.actor.{ActorLogging,Props}
+import akka.routing.RoundRobinRouter
 
 import akka.pattern.ask
 import akka.util.Timeout
 
-import akka.actor.{OneForOneStrategy, SupervisorStrategy}
-import akka.routing.RoundRobinRouter
+import de.kp.spark.rest.Configuration
 
-import de.kp.spark.rest.{Configuration,TrackRequest,TrackResponse,ResponseStatus}
 import de.kp.spark.rest.track.{ElasticContext,KafkaContext}
+import de.kp.spark.rest.model._
 
 import scala.concurrent.duration.DurationInt
 
-class TrackMaster extends Actor with ActorLogging {
-  
-  /* Load configuration for routers */
-  val (time,retries,workers) = Configuration.router   
-  
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
-    case _ : Exception => SupervisorStrategy.Restart
-  }
+class TrackMaster extends MonitoredActor with ActorLogging {
 
   val (elastic,kafka) = Configuration.tracking
-  val router = if (elastic) {
+  override val router = if (elastic) {
     
     val ec = new ElasticContext()
     context.actorOf(Props(new ElasticActor(ec)).withRouter(RoundRobinRouter(workers)))
@@ -58,13 +51,14 @@ class TrackMaster extends Actor with ActorLogging {
   }
 
   def receive = {
+    /*
+     * Message sent by the scheduler to track the 'heartbeat' of this actor
+     */
+    case req:AliveMessage => register("TrackMaster")
     
     case req:TrackRequest => {
       
-      implicit val ec = context.dispatcher
-
-      val duration = Configuration.actor      
-      implicit val timeout:Timeout = DurationInt(duration).second
+      implicit val timeout:Timeout = DurationInt(time).second
 	  	    
 	  val origin = sender
       val response = ask(router, req).mapTo[TrackResponse]

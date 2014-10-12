@@ -28,7 +28,7 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
-import de.kp.spark.rest.TrackRequest
+import de.kp.spark.rest.model._
 
 class TrackDecoder(props: VerifiableProperties) extends Decoder[TrackRequest] {
     

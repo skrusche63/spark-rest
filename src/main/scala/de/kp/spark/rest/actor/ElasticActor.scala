@@ -20,7 +20,7 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
-import de.kp.spark.rest.{TrackRequest,TrackResponse,ResponseStatus}
+import de.kp.spark.rest.model._
 import de.kp.spark.rest.track.{ElasticContext,EventUtils}
 
 class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {

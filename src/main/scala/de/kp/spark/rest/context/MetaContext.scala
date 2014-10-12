@@ -18,7 +18,8 @@ package de.kp.spark.rest.context
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.{RemoteClient,ServiceRequest}
+import de.kp.spark.rest.RemoteClient
+import de.kp.spark.rest.model._
 
 import scala.concurrent.Future
 import scala.collection.mutable.HashMap
