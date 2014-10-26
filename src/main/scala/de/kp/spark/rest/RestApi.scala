@@ -83,10 +83,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("query") {
+    path("get" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doQuery(ctx)
+	      ctx => doGet(ctx,service,subject)
 	    }
 	  }
     }  ~ 
@@ -98,6 +98,20 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doMetadata(ctx,segment)
+	    }
+	  }
+    }  ~ 
+    path("query") {
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doQuery(ctx)
+	    }
+	  }
+    }  ~ 
+   path("status" / Segment) {segment => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,segment)
 	    }
 	  }
     }  ~ 
@@ -114,128 +128,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    /*
-     * Action specifies a concept that is supported by the REST service;
-     * other concepts are content,feature,product and state
-     */
-    path("action/train" / Segment) {segment =>
+    path("train" / Segment) {segment =>
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,"action",segment)
-	    }
-	  }
-    }  ~ 
-    path("action/get" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"action",service,subject)
-	    }
-	  }
-    }  ~ 
-    path("action/status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,"action",segment)
-	    }
-	  }
-    }  ~ 
-    /*
-     * Content specifies a concept that is supported by the REST service;
-     * other concepts are action,feature,product and state
-     */
-    path("content/train" / Segment) {segment =>
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,"content",segment)
-	    }
-	  }
-    }  ~ 
-    path("content/get" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"content",service,subject)
-	    }
-	  }
-    }  ~ 
-    path("content/status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,"content",segment)
-	    }
-	  }
-    }  ~ 
-    /*
-     * Feature specifies a concept that is supported by the REST service;
-     * other concepts are action,content,product and state
-     */
-    path("feature/train" / Segment) {segment =>
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,"feature",segment)
-	    }
-	  }
-    }  ~ 
-    path("feature/get" / Segment / Segment) {(service,subject) =>  
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"feature",service,subject)
-	    }
-	  }
-    }  ~ 
-    path("feature/status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,"feature",segment)
-	    }
-	  }
-    }  ~ 
-    /*
-     * Product specifies a concept that is supported by the REST service;
-     * other concepts are action,content,features and state
-     */
-    path("product/train" / Segment) {segment =>
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,"product",segment)
-	    }
-	  }
-    }  ~ 
-    path("product/get" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"product",service,subject)
-	    }
-	  }
-    }  ~ 
-    path("product/status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,"product",segment)
-	    }
-	  }
-    }  ~ 
-    /*
-     * State specifies a concept that is supported by the REST service;
-     * other concepts are action,content,features and product
-     */
-    path("state/train" / Segment) {segment =>
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,"state",segment)
-	    }
-	  }
-    }  ~ 
-    path("state/get" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,"state",service,subject)
-	    }
-	  }
-    }  ~ 
-    path("state/status" / Segment) {segment => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,"state",segment)
+	      ctx => doTrain(ctx,segment)
 	    }
 	  }
     }  ~ 
@@ -304,72 +200,111 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
 
-  private def doGet[T](ctx:RequestContext,concept:String,service:String,subject:String) = {
+  private def doGet[T](ctx:RequestContext,service:String,subject:String) = {
 
     service match {
-      /*
-       * Request to get a decision for a certain feature set; 
-       * the request is mapped onto the internal 'decision' service
-       * 
-       * ../get/decision/feature
-       */
-      case "decision" => doRequest(ctx,"decision","get:decision")
-      /*
-       * Request to get an intent prediction for a (series of) user
-       * states; the request is mapped into the internal 'intent'
-       * service
-       */
-       case "intent" => doRequest(ctx,"intent","get")     
-	  /*
-	   * Request to get outliers with respect to features or states;
-	   * the request is mapped onto the internal 'outlier' service
-	   * 
-	   * ../get/outlier/feature|state
-	   */
-	  case "outlier" => doRequest(ctx,"outlier","get:outlier")
 
-	  case "rule" => {
+	  case "association" => {
 	    
-	    subject match {
-	      
-	      /*
-	       * Request to retrieve the relation models; this request is mapped 
-	       * onto the internal 'rule' service
-	       * 
-	       * ../get/rule/relations
-	       */
-	      case "relations" => doRequest(ctx,"rule","get:relation")
-	      /*
-	       * Request to retrieve the rule models; this request is mapped 
-	       * onto the internal 'rule' service
-	       * 
-	       * ../get/rule/rules
-	       */
-	      case "rules" => doRequest(ctx,"rule","get:rule")
+	    subject match {	      
+	      /* ../get/association/followers */
+	      case "followers" => doRequest(ctx,"association","get:followers")	      
+	      /* ../get/association/items */
+	      case "items" => doRequest(ctx,"association","get:items")
+	      /* ../get/association/rules */
+	      case "rules" => doRequest(ctx,"rule","get:rules")
 	      
 	      case _ => {}
 	      
 	    }
 
 	  }
-	  
+	  case "context" => {
+	    
+	    subject match {	      
+	      /* ../get/context/prediction */
+	      case "prediction" => doRequest(ctx,"context","get:prediction")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+      case "decision" => {
+	    
+	    subject match {	      
+	      /* ../get/decision/prediction */
+	      case "prediction" => doRequest(ctx,"decision","get:prediction")
+	      
+	      case _ => {}
+	      
+	    }
+      
+      }
+      case "intent" => {
+	    
+	    subject match {	      
+	      /* ../get/intent/prediction */
+	      case "prediction" => doRequest(ctx,"intent","get:prediction")
+	      
+	      case _ => {}
+	      
+	    }
+      
+      }
+	  case "outlier" => {
+	    
+	    subject match {
+	      /* ../get/outlier/outliers */
+	      case "outliers" => doRequest(ctx,"outlier","get:outliers")
+	      
+	      case _ => {}
+	    
+	    }
+	    
+	  }
 	  case "series" => {
 	    
 	    subject match {
-	      /*
-	       * Request to get detected patterns from series analysis;
-	       * the request is mapped onto the internal 'series' service
-	       * 
-	       * ../get/series/patterns
-	       */
-	      case "patterns" => doRequest(ctx,"series","get:pattern")
-	      /*
-	       * Request to get detected rules from series analysis;
-	       * the request is mapped onto the internal 'series' service
-	       * 
-	       * ../get/series/rules
-	       */
-	      case "rules" => doRequest(ctx,"series","get:rule")
+	      /* ../get/series/followers */
+	      case "followers" => doRequest(ctx,"series","get:followers")	
+	      /* ../get/series/patterns */
+	      case "patterns" => doRequest(ctx,"series","get:patterns")
+	      /* ../get/series/rules */
+	      case "rules" => doRequest(ctx,"series","get:rules")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "similarity" => {
+	    
+	    subject match {
+	      /* ../get/similarity/features */
+	      case "features" => doRequest(ctx,"similarity","get:features")	
+	      /* ../get/similarity/sequences */
+	      case "sequences" => doRequest(ctx,"similarity","get:sequences")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* ../get/text/concepts */
+	      case "concepts" => doRequest(ctx,"text","get:concepts")	
 	      
 	      case _ => {}
 	      
@@ -382,75 +317,47 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
-  private def doTrain[T](ctx:RequestContext,concept:String,service:String) = {
+  private def doTrain[T](ctx:RequestContext,service:String) = {
 
+    /* Train requests are distinguished by their targeted services */
     service match {
-      /*
-       * Request to build a decision model with respect to features; 
-       * the requestor has to make sure that the appropriate algorithm 
-       * is selected, i.e. for features this is RF
-       */
-      case "decision" => doRequest(ctx,"decision","train")
-      /*
-       * Request to build an intent model with respect to states;
-       * the requestor has to make sure that the appropriate algorithm
-       * is selected, i.e. MARKOV or HIDDEN_MARKOV
-       */
-      case "intent" => doRequest(ctx,"intent","train")
-	  /*
-	   * Request to train outlier with respect to features or states; 
-	   * the requestor has to make sure that the appropriate algorithm 
-	   * is selected, i.e.for features this is KMeans and for states 
-	   * this is MARKOV
-	   */
-	  case "outlier" => doRequest(ctx,"outlier","train")
-	  /*
-	   * Request to train rule-based models; this request is mapped 
-	   * onto the internal 'rule' service and either uses the Top-K or 
-	   * Top-K non redundant algorithm 
-	   */
-	  case "rule" => doRequest(ctx,"rule","train")
-	  /*
-	   * Request to train series-based models; this request is mapped 
-	   * onto the internal 'series' service and either uses the SPADE
-	   * or TSR algorithm 
-	   */
-	  case "series" => doRequest(ctx,"series","train")
       
-	  case _ => {}
+	  case "association" => doRequest(ctx,"association","train")
+
+	  case "context"  => doRequest(ctx,"context","train")
+	  case "decision" => doRequest(ctx,"decision","train")
+
+	  case "intent"  => doRequest(ctx,"intent","train")
+	  case "outlier" => doRequest(ctx,"outlier","train")
+
+	  case "series"     => doRequest(ctx,"series","train")
+	  case "similarity" => doRequest(ctx,"similarity","train")
+
+	  case "social" => doRequest(ctx,"social","train")
+	  case "text"   => doRequest(ctx,"text","train")
 	  
     }
   
   }
 
-  private def doStatus[T](ctx:RequestContext,concept:String,service:String) = {
+  private def doStatus[T](ctx:RequestContext,service:String) = {
 
+    /* Status requests are distinguished by their targeted services */
     service match {
-	  /*
-	   * Request to retrieve the status of training (or mining) a decision
-	   * model
-	   */
+      
+	  case "association" => doRequest(ctx,"association","status")
+
+	  case "context"  => doRequest(ctx,"context","status")
 	  case "decision" => doRequest(ctx,"decision","status")
-	  /*
-	   * Request to retrieve the status of training (or mining) an intent
-	   * model
-	   */
-	  case "intent" => doRequest(ctx,"intent","status")
-	  /*
-	   * Request to retrieve the status of training (or mining) an outlier
-	   * model
-	   */
+
+	  case "intent"  => doRequest(ctx,"intent","status")
 	  case "outlier" => doRequest(ctx,"outlier","status")
-	  /*
-	   * Request to retrieve the status of training (or mining) a rule-based
-	   * model
-	   */
-	  case "rule" => doRequest(ctx,"rule","status")
-	  /*
-	   * Request to retrieve the status of training (or mining) a series-based
-	   * model
-	   */
-	  case "series" => doRequest(ctx,"series","status")
+
+	  case "series"     => doRequest(ctx,"series","status")
+	  case "similarity" => doRequest(ctx,"similarity","status")
+
+	  case "social" => doRequest(ctx,"social","status")
+	  case "text"   => doRequest(ctx,"text","status")
       
 	  case _ => {}
 	  

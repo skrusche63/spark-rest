@@ -36,7 +36,7 @@ object ActorMonitor {
   
   def isAlive(names:Seq[String]):ActorsStatus = {
     
-    val now = new Date().toGMTString()
+    val now = new Date().toString()
     val actors = ArrayBuffer.empty[ActorStatus]
     
     for (name <- names) {

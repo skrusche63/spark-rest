@@ -41,7 +41,7 @@ trait MonitoredActor extends Actor {
   val (duration,retries,workers) = Configuration.router  
   
   implicit val ec = context.dispatcher
-  val scheduledTask = context.system.scheduler.schedule(0 seconds, 1 second,self,new AliveMessage())  
+  val scheduledTask = context.system.scheduler.schedule(DurationInt(0).second, DurationInt(1).second,self,new AliveMessage())  
 
   val router = context.actorOf(Props(new StatusActor()).withRouter(RoundRobinRouter(workers)))
  
