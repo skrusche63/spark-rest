@@ -68,7 +68,7 @@ identify customers by their journeys. It is based on the new S2MP algorithm to f
 
 ### Reactive Text Analysis Engine
 
-![Text Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/scala-rest/master/images/text-analysis-overview.png)
+![Text Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/text-analysis-overview.png)
 
 The Text Analysis Engine is one of the nine members of the open ensemble and is built to support language-agnostic semantic concept detection and prediction 
 for semantic targeting.
