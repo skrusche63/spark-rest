@@ -23,47 +23,13 @@ import org.elasticsearch.common.xcontent.{XContentBuilder,XContentFactory}
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 
-object EventUtils {
-  /*
-   * Definition of supported event parameters
-   */
-  val TIMESTAMP_FIELD:String = "timestamp"
+class ExtendedItemBuilder {
 
-  val SITE_FIELD:String = "site"
-  val USER_FIELD:String = "user"
-
-  val GROUP_FIELD:String = "group"
-  val ITEM_FIELD:String  = "item"
-
-  def prepare(params:Map[String,String]):(String,String,XContentBuilder,java.util.Map[String,Object]) = {
-
-    val index = params("index")
-    val mapping = params("type")
-    
-    val builder = createBuilder(mapping)
-    
-    val source = HashMap.empty[String,String]
-    
-    source += SITE_FIELD -> params(SITE_FIELD)
-    source += USER_FIELD -> params(USER_FIELD)
-      
-    source += TIMESTAMP_FIELD -> params(TIMESTAMP_FIELD)
- 
-    source += GROUP_FIELD -> params(GROUP_FIELD)
-    source += ITEM_FIELD -> params(ITEM_FIELD)
-    
-    (index,mapping,builder,source)
-    
-  }
+  import de.kp.spark.rest.track.ElasticBuilderFactory._
   
-  private def createBuilder(mapping:String):XContentBuilder = {
+  def createBuilder(mapping:String):XContentBuilder = {
     /*
-     * Define mapping schema for index 'index' and 'type'; note, that
-     * we actually support the following common schema for rule and
-     * also series analysis: timestamp, site, user, group and item.
-     * 
-     * This schema is compliant to the actual transactional as well
-     * as sequence source in spark-arules and spark-fsm
+     * Define mapping schema for index 'index' and 'type'
      */
     val builder = XContentFactory.jsonBuilder()
                       .startObject()
@@ -97,6 +63,11 @@ object EventUtils {
                           .startObject(ITEM_FIELD)
                             .field("type", "integer")
                           .endObject()
+                          
+                          /* price */
+                          .startObject(PRICE_FIELD)
+                            .field("type", "float")
+                          .endObject()
 
                         .endObject() // properties
                       .endObject()   // mapping
@@ -106,4 +77,22 @@ object EventUtils {
 
   }
   
+  def prepare(params:Map[String,String]):java.util.Map[String,Object] = {
+    
+    val source = HashMap.empty[String,String]
+    
+    source += SITE_FIELD -> params(SITE_FIELD)
+    source += USER_FIELD -> params(USER_FIELD)
+      
+    source += TIMESTAMP_FIELD -> params(TIMESTAMP_FIELD)
+ 
+    source += GROUP_FIELD -> params(GROUP_FIELD)
+    source += ITEM_FIELD -> params(ITEM_FIELD)
+
+    source += PRICE_FIELD -> params(PRICE_FIELD)
+
+    source
+    
+  }
+
 }

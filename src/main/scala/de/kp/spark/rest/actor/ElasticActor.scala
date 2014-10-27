@@ -21,7 +21,7 @@ package de.kp.spark.rest.actor
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.rest.model._
-import de.kp.spark.rest.track.{ElasticContext,EventUtils}
+import de.kp.spark.rest.track.{ElasticBuilderFactory => EBF,ElasticContext}
 
 class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
 
@@ -34,10 +34,45 @@ class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
 
       val topic = req.topic
       topic match {
+
+        /**
+         * The amount data structure is based on the RFM model: 
+         * R(ecency), F(requency) and M(onetary value) and is an 
+         * appropriate starting point for intent recognition
+         */
+        case "amount" => registerRecord(topic,req.data)
         
-        case "event" => registerEvent(req.data)
+        /**
+         * The extended item data structure is common to outlier
+         * detection
+         */
+        case "extended_item" => registerRecord(topic,req.data)
         
-        case "feature" => registerFeature(req.data)
+        /**
+         * The item data structure is common to association, series
+         * and similarity analysis
+         */        
+        case "item" => registerRecord(topic,req.data)
+        
+        /**
+         * The decision feature data structure is common to decision
+         * analysis
+         */        
+        case "decision_feature" => registerFeature(topic,req.data)
+        
+        /**
+         * The labeled feature data structure is common to outlier
+         * detection and similarity analysis
+         */
+        case "labeled_feature" => registerFeature(topic,req.data)
+        
+        /**
+         * The targeted feature data structure is common to context-aware
+         * analysis
+         */
+        case "targeted_feature" => registerFeature(topic,req.data)
+        
+        case _ => {/* do nothing */}
 
       }
       
@@ -45,14 +80,39 @@ class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
     
   }
   
-  private def registerEvent(params:Map[String,String]) {
+  private def registerRecord(topic:String,params:Map[String,String]) {
+   /*
+    * Elasticsearch is used as a source and also as a sink; this implies
+    * that the respective index and mapping must be distinguished; the source
+    * index and mapping used here is the same as for ElasticSource
+    */
+    val index = params("source.index")
+    val mapping = params("source.type")
     
-    val(index,mapping,builder,source) = EventUtils.prepare(params)
+    val builder = EBF.getBuilder(topic, mapping)    
+    val source = EBF.getSource(topic,params)
+ 
     ec.register(index,mapping,builder,source)
     
   }
   
-  private def registerFeature(params:Map[String,String]) {
+  private def registerFeature(topic:String,params:Map[String,String]) {
+    
+   /*
+    * Elasticsearch is used as a source and also as a sink; this implies
+    * that the respective index and mapping must be distinguished; the source
+    * index and mapping used here is the same as for ElasticSource
+    */
+    val index = params("source.index")
+    val mapping = params("source.type")
+    
+    val (names,types) = EBF.getFields(topic,params)
+    
+    val builder = EBF.getBuilder(topic, mapping, names, types)    
+    val source = EBF.getSource(topic,params)
+ 
+    ec.register(index,mapping,builder,source)
     
   }
+  
 }

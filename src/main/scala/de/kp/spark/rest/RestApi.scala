@@ -108,7 +108,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-   path("status" / Segment) {segment => 
+    path("status" / Segment) {segment => 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doStatus(ctx,segment)
@@ -173,9 +173,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
   
-  /**
-   * Access 'meta' service to register metadata description
-   */
   private def doMetadata[T](ctx:RequestContext,service:String) = doMetaRequest(ctx,service)
 
   private def doQuery[T](ctx:RequestContext,service:String="insight") = {
@@ -183,13 +180,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val request = new InsightRequest(service,getRequest(ctx))      
     implicit val timeout:Timeout = DurationInt(time).second
     
-//    val response = ask(insightMaster,request).mapTo[InsightResponse] 
-//    ctx.complete(response)
+    val response = "Query is not implemented yet."
+    ctx.complete(response)
    
   }
-  /**
-   * Common method to handle all track requests sent to the REST API
-   */
+
   private def doTrack[T](ctx:RequestContext,topic:String) = {
     
     val request = new TrackRequest(topic,getRequest(ctx))
