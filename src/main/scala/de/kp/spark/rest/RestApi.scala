@@ -239,8 +239,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
       case "intent" => {
 	    
 	    subject match {	      
-	      /* ../get/intent/prediction */
-	      case "prediction" => doRequest(ctx,"intent","get:prediction")
+	      /* ../get/intent/loyalty */
+	      case "loyalty" => doRequest(ctx,"intent","get:loyalty")
+
+	      /* ../get/intent/purchase */
+	      case "purchase" => doRequest(ctx,"intent","get:purchase")
 	      
 	      case _ => {}
 	      
