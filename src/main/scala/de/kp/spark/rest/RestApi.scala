@@ -253,8 +253,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "outlier" => {
 	    
 	    subject match {
-	      /* ../get/outlier/outliers */
-	      case "outliers" => doRequest(ctx,"outlier","get:outliers")
+	      /* ../get/outlier/behavior */
+	      case "behavior" => doRequest(ctx,"outlier","get:behavior")
+	      /* ../get/outlier/features */
+	      case "features" => doRequest(ctx,"outlier","get:features")
 	      
 	      case _ => {}
 	    
