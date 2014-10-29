@@ -1,15 +1,15 @@
-![Elasticworks.](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/predictiveworks.png)
+![Predictiveworks.](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/predictiveworks.png)
 
 **Predictiveworks.** is an open ensemble of predictive engines and has been made to cover a wide range of today's analytics 
 requirements. **Predictiveworks.**  brings the power of predictive analytics to Elasticsearch.
 
 For easy and flexible integration every engine has a REST API and is accessible as an Akka enabled remote service.
 
-## Elasticworks. REST API
+## Predictiveworks. REST API
 
-The REST API for **Elasticworks.** provides a one-stop strategy to the different predictive engines via a common interface:
+The REST API for **Predictiveworks.** provides a one-stop strategy to the different predictive engines via a common interface:
 
-### Reactive Association Analysis Engine
+### [Reactive Association Analysis Engine](https://github.com/skrusche63/spark-arules)
 
 ![Association Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/association-rules-overview.png)
 
