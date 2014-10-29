@@ -17,7 +17,7 @@ The Association Analysis Engine is one of the nine members of the open ensemble 
 mining algorithm. The approach overcomes the well-known "threshold problem" and makes it a lot easier to directly leverage the resulting content and product rules.
 
 
-### Reactive Context-Aware Analysis Engine
+### [Reactive Context-Aware Analysis Engine](https://github.com/skrusche63/spark-fm)
 
 ![Factorization Machines Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/factorization-machines-overview.png)
 
@@ -25,7 +25,7 @@ The Context-Aware Analysis Engine is one of the nine members of the open ensembl
 multi-dimensional datasets. It is the key to the next-generation of personalized predictions and customer relationships.
   
 
-### Reactive Decision Analysis Engine
+### [Reactive Decision Analysis Engine](https://github.com/skrusche63/spark-decision)
 
 ![Decision Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/decision-analysis-overview.png)
 
@@ -34,7 +34,7 @@ and identify their decisive factors. The machine learning algorithm is unexcelle
 and powerful randomization strategies. 
 
 
-### Reactive Intent Recognition Engine
+### [Reactive Intent Recognition Engine](https://github.com/skrusche63/spark-intent)
 
 ![Intent Recognition Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/intent-recognition-overview.png)
 
@@ -42,7 +42,7 @@ The Intent Recognition Engine is one of the nine members of the open ensemble an
 the ultimate customer understanding. It is based on an approved scientific algorithms to unveil and leverage hidden data from human behavior. 
 
 
-### Reactive Outlier Detection Engine
+### [Reactive Outlier Detection Engine](https://github.com/skrusche63/spark-outlier)
 
 ![Outlier Detection Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/outlier-detection-overview.png)
 
@@ -50,7 +50,7 @@ The Outlier Detection Engine is one of the nine members of the open ensemble and
 for advanced risk reduction. 
 
 
-### Reactive Series Analysis Engine
+### [Reactive Series Analysis Engine](https://github.com/skrusche63/spark-fsm)
 
 ![Series Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/series-analysis-overview.png)
 
@@ -58,7 +58,7 @@ The Series Analysis Engine is one of the nine members of the open ensemble and i
 mining algorithm. The approach overcomes the well-known "threshold problem" and makes it a lot easier to directly leverage the resulting patterns and rules.
 
 
-### Reactive Similarity Analysis Engine
+### [Reactive Similarity Analysis Engine](https://github.com/skrusche63/spark-cluster)
 
 ![Similarity Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/similarity-analysis-overview.png)
 
@@ -66,7 +66,7 @@ The Similarity Analysis Engine is one of the nine members of the open ensemble a
 identify customers by their journeys. It is based on the new S2MP algorithm to find similarities for sequential patterns in large scale datasets. 
 
 
-### Reactive Text Analysis Engine
+### [Reactive Text Analysis Engine](https://github.com/skrusche63/spark-text)
 
 ![Text Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-rest/master/images/text-analysis-overview.png)
 
