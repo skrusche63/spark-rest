@@ -34,7 +34,7 @@ import scala.concurrent.duration.DurationInt
 class TrackMaster extends MonitoredActor with ActorLogging {
 
   val (elastic,kafka) = Configuration.tracking
-  override val router = if (elastic) {
+  val router = if (elastic) {
     
     val ec = new ElasticContext()
     context.actorOf(Props(new ElasticActor(ec)).withRouter(RoundRobinRouter(workers)))

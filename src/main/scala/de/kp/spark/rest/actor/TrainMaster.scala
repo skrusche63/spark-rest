@@ -18,16 +18,20 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.ActorLogging
+import akka.actor.{ActorLogging,Props}
 
 import akka.pattern.ask
 import akka.util.Timeout
 
 import de.kp.spark.rest.model._
 
+import akka.routing.RoundRobinRouter
+
 import scala.concurrent.duration.DurationInt
 
 class TrainMaster extends MonitoredActor with ActorLogging {
+
+  val router = context.actorOf(Props(new TrainActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     /*

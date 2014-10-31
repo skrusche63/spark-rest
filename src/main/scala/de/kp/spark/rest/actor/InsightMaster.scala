@@ -18,10 +18,12 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.ActorLogging
+import akka.actor.{ActorLogging,Props}
 
 import akka.pattern.ask
 import akka.util.Timeout
+
+import akka.routing.RoundRobinRouter
 
 import de.kp.spark.rest.model._
 
@@ -29,11 +31,13 @@ import scala.concurrent.duration.DurationInt
 
 class InsightMaster extends MonitoredActor with ActorLogging {
 
+  val router = context.actorOf(Props(new InsightActor()).withRouter(RoundRobinRouter(workers)))
+
   def receive = {
     /*
      * Message sent by the scheduler to track the 'heartbeat' of this actor
      */
-    case req:AliveMessage => register("InsightMaster")
+    case req:AliveMessage => register("InsiInsightghtMaster")
     
     case req:InsightRequest => {
       

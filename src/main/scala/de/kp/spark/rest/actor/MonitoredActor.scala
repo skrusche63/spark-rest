@@ -26,7 +26,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
-import akka.routing.RoundRobinRouter
 
 import de.kp.spark.rest.Configuration
 import de.kp.spark.rest.model._
@@ -42,8 +41,6 @@ trait MonitoredActor extends Actor {
   
   implicit val ec = context.dispatcher
   val scheduledTask = context.system.scheduler.schedule(DurationInt(0).second, DurationInt(1).second,self,new AliveMessage())  
-
-  val router = context.actorOf(Props(new StatusActor()).withRouter(RoundRobinRouter(workers)))
  
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(duration).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
