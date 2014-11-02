@@ -19,25 +19,10 @@ package de.kp.spark.rest.context
 */
 
 import de.kp.spark.rest.RemoteClient
-import de.kp.spark.rest.model._
-
-import scala.concurrent.Future
 import scala.collection.mutable.HashMap
 
-object InsightContext {
+object InsightContext extends RemoteContext{
 
- private val clientPool = HashMap.empty[String,RemoteClient]
- 
-  def send(req:ServiceRequest):Future[Any] = {
-   
-    val service = req.service
-    if (clientPool.contains(service) == false) {
-      clientPool += service -> new RemoteClient(service)      
-    }
-   
-    val client = clientPool(service)
-    client.send(Serializer.serializeRequest(req))
- 
-  }
+  override val clientPool = HashMap.empty[String,RemoteClient]
   
 }

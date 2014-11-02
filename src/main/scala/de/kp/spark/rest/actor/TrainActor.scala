@@ -32,10 +32,13 @@ class TrainActor extends Actor with ActorLogging {
     case req:ServiceRequest => {
       
       val origin = sender
-      val response = TrainContext.send(req).mapTo[ServiceResponse]
       
+      val service = req.service
+      val message = Serializer.serializeRequest(req)
+      
+      val response = TrainContext.send(service,message).mapTo[String]     
       response.onSuccess {
-        case result => origin ! result
+        case result => origin ! Serializer.deserializeResponse(result)
       }
       response.onFailure {
         case result => origin ! failure(req)	 	      

@@ -39,6 +39,7 @@ object Serializer {
   def serializeActorsStatus(stati:ActorsStatus):String = write(stati)
  
   def serializeRequest(request:ServiceRequest):String = write(request)
+  def deserializeResponse(response:String):ServiceResponse = read[ServiceResponse](response)
 
 }
 

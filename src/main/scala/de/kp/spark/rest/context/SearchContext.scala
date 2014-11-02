@@ -19,13 +19,10 @@ package de.kp.spark.rest.context
 */
 
 import de.kp.spark.rest.RemoteClient
-import scala.concurrent.Future
+import scala.collection.mutable.HashMap
 
-class SearchContext {
+class SearchContext extends RemoteContext {
 
-  private val service = "search"
-  private val client = new RemoteClient(service)
-
-  def send(req:Any):Future[Any] = client.send(req)
+  override val clientPool = HashMap.empty[String,RemoteClient]
   
 }

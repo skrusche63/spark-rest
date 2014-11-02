@@ -19,10 +19,23 @@ package de.kp.spark.rest.context
 */
 
 import de.kp.spark.rest.RemoteClient
+
+import scala.concurrent.Future
 import scala.collection.mutable.HashMap
 
-object PredictContext extends RemoteContext {
+class RemoteContext {
 
-  override val clientPool = HashMap.empty[String,RemoteClient]
-  
+  val clientPool = HashMap.empty[String,RemoteClient]
+ 
+  def send(service:String,message:String):Future[Any] = {
+   
+    if (clientPool.contains(service) == false) {
+      clientPool += service -> new RemoteClient(service)      
+    }
+   
+    val client = clientPool(service)
+    client.send(message)
+ 
+  }
+
 }
