@@ -28,9 +28,9 @@ object MetaContext {
 
   private val clientPool = HashMap.empty[String,RemoteClient]
  
-  def send(req:String):Future[Any] = {
+  def send(req:ServiceRequest):Future[Any] = {
    
-    val service = "meta"
+    val service = req.service
     if (clientPool.contains(service) == false) {
       clientPool += service -> new RemoteClient(service)      
     }

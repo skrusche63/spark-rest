@@ -39,18 +39,18 @@ class MetaMaster extends MonitoredActor with ActorLogging {
      */
     case req:AliveMessage => register("MetaMaster")
     
-    case req:String => {
+    case req:ServiceRequest => {
 
       implicit val timeout:Timeout = DurationInt(time).second
 	  	    
 	  val origin = sender
-      val response = ask(router, req).mapTo[String]
+      val response = ask(router, req).mapTo[ServiceRequest]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case throwable => origin ! throwable.getMessage()      
+        case throwable => origin ! failure(req)        
 	  }
       
     }

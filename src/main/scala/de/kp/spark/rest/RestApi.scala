@@ -94,10 +94,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
      * This request provides a metadata specification that has to be
      * registered in a Redis instance by the 'meta' service
      */
-    path("metadata" / Segment) {segment => 
+    path("register" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doMetadata(ctx,segment)
+	      ctx => doRegister(ctx,service,subject)
 	    }
 	  }
     }  ~ 
@@ -173,7 +173,92 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     
   }
   
-  private def doMetadata[T](ctx:RequestContext,service:String) = doMetaRequest(ctx,service)
+  private def doRegister[T](ctx:RequestContext,service:String,subject:String) = {
+
+    service match {
+
+	  case "association" => {
+	    /* ../register/association/fields */
+	    doRequest(ctx,"association","register")	      
+	  }
+	  case "context" => {
+	    /* ../register/context/features */
+	    doRequest(ctx,"context","register")	      
+	  }
+      case "decision" => {
+	    /* ../register/decision/features */
+	    doRequest(ctx,"decision","register")	      
+      }
+      case "intent" => {
+	    
+	    subject match {	      
+	      /* ../register/intent/loyalty */
+	      case "loyalty" => doRequest(ctx,"intent","register:loyalty")
+
+	      /* ../register/intent/purchase */
+	      case "purchase" => doRequest(ctx,"intent","register:purchase")
+	      
+	      case _ => {}
+	      
+	    }
+      
+      }
+	  case "outlier" => {
+	    
+	    subject match {
+	      /* ../register/outlier/features */
+	      case "features" => doRequest(ctx,"outlier","register:features")
+	      /* ../get/register/sequences */
+	      case "sequences" => doRequest(ctx,"outlier","register:sequences")
+	      
+	      case _ => {}
+	    
+	    }
+	    
+	  }
+	  case "series" => {
+	    /* ../register/series/fields */
+	    doRequest(ctx,"series","register")	      
+	  }
+	  case "similarity" => {
+	    
+	    subject match {
+	      /* ../register/similarity/features */
+	      case "features" => doRequest(ctx,"similarity","register:features")	
+	      /* ../register/similarity/sequences */
+	      case "sequences" => doRequest(ctx,"similarity","register:sequences")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* ../get/text/concepts */
+	      case "concepts" => doRequest(ctx,"text","get:concepts")	
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
+    }
+    
+  }
 
   private def doQuery[T](ctx:RequestContext,service:String="insight") = {
      
@@ -253,10 +338,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "outlier" => {
 	    
 	    subject match {
-	      /* ../get/outlier/behavior */
-	      case "behavior" => doRequest(ctx,"outlier","get:behavior")
 	      /* ../get/outlier/features */
 	      case "features" => doRequest(ctx,"outlier","get:features")
+	      /* ../get/outlier/sequences */
+	      case "sequences" => doRequest(ctx,"outlier","get:sequences")
 	      
 	      case _ => {}
 	    
@@ -374,16 +459,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
     
   }
-  
-  private def doMetaRequest[T](ctx:RequestContext,target:String) = {
-     
-    val request = getBodyAsString(ctx)
-    implicit val timeout:Timeout = DurationInt(time).second
-    
-    val response = ask(registrar,request).mapTo[String] 
-    ctx.complete(response)
-    
-  }
 
   private def getHeaders(ctx:RequestContext):Map[String,String] = {
     
@@ -440,9 +515,11 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     req match {
       
       case "get"   => finder
-      case "train" => trainer
       
       case "status" => monitor
+      case "train" => trainer
+
+      case "register" => registrar
       
       case _ => null
       

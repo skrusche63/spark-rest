@@ -20,6 +20,7 @@ package de.kp.spark.rest.actor
 
 import akka.actor.{Actor,ActorLogging}
 
+import de.kp.spark.rest.model._
 import de.kp.spark.rest.context.MetaContext
 
 class MetaActor() extends Actor with ActorLogging {
@@ -28,20 +29,27 @@ class MetaActor() extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:String => {
+    case req:ServiceRequest => {
       
       val origin = sender
-      val response = MetaContext.send(req).mapTo[String]
+      val response = MetaContext.send(req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case throwable => origin ! throwable.getMessage()	 	      
+        case throwable => origin ! failure(req)	 	      
 	  }
       
     }
     
+  }
+  
+  private def failure(req:ServiceRequest):ServiceResponse = {
+    
+    val uid = req.data("uid")    
+    new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
+  
   }
 
 }
