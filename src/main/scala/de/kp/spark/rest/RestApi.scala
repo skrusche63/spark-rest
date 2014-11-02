@@ -245,9 +245,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "text" => {
 	    
 	    subject match {
-	      /* ../get/text/concepts */
-	      case "concepts" => doRequest(ctx,"text","get:concepts")	
-	      
+	      /* Not implemented yet */
 	      case _ => {}
 	      
 	    }
