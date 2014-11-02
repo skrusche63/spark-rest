@@ -36,8 +36,8 @@ object StatusContext {
     }
    
     val client = clientPool(service)
-    client.send(req)
+    client.send(Serializer.serializeRequest(req))
  
- }
+  }
   
 }

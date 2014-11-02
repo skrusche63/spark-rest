@@ -28,7 +28,7 @@ object InsightContext {
 
  private val clientPool = HashMap.empty[String,RemoteClient]
  
-  def send(req:InsightRequest):Future[Any] = {
+  def send(req:ServiceRequest):Future[Any] = {
    
     val service = req.service
     if (clientPool.contains(service) == false) {
@@ -36,8 +36,8 @@ object InsightContext {
     }
    
     val client = clientPool(service)
-    client.send(req)
+    client.send(Serializer.serializeRequest(req))
  
- }
+  }
   
 }

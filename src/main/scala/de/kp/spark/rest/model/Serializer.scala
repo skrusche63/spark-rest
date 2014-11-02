@@ -37,6 +37,8 @@ object Serializer {
   implicit val formats = Serialization.formats(NoTypeHints)
 
   def serializeActorsStatus(stati:ActorsStatus):String = write(stati)
+ 
+  def serializeRequest(request:ServiceRequest):String = write(request)
 
 }
 

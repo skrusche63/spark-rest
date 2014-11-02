@@ -29,18 +29,8 @@ class InsightActor() extends Actor with ActorLogging {
 
   def receive = {
     
-    case req:InsightRequest => {
-      
-      val origin = sender
-      val response = InsightContext.send(req).mapTo[InsightResponse]
-      
-      response.onSuccess {
-        case result => origin ! result
-      }
-      response.onFailure {
-        case result => origin ! new InsightResponse(ResponseStatus.FAILURE)	      
-	  }
-      
+    case req:ServiceRequest => {
+       /* not yet implemented */     
     }
     
   }
