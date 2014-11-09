@@ -86,8 +86,8 @@ class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
     * that the respective index and mapping must be distinguished; the source
     * index and mapping used here is the same as for ElasticSource
     */
-    val index = params("source.index")
-    val mapping = params("source.type")
+    val index = params("index")
+    val mapping = params("type")
     
     val builder = EBF.getBuilder(topic, mapping)    
     val source = EBF.getSource(topic,params)
@@ -103,8 +103,8 @@ class ElasticActor(ec:ElasticContext) extends Actor with ActorLogging {
     * that the respective index and mapping must be distinguished; the source
     * index and mapping used here is the same as for ElasticSource
     */
-    val index = params("source.index")
-    val mapping = params("source.type")
+    val index = params("index")
+    val mapping = params("type")
     
     val (names,types) = EBF.getFields(topic,params)
     
