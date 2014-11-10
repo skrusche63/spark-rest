@@ -206,10 +206,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "outlier" => {
 	    
 	    subject match {
-	      /* ../register/outlier/features */
-	      case "features" => doRequest(ctx,"outlier","register:features")
-	      /* ../get/register/sequences */
-	      case "sequences" => doRequest(ctx,"outlier","register:sequences")
+	      /* ../register/outlier/feature */
+	      case "feature" => doRequest(ctx,"outlier","register:feature")
+	      /* ../get/register/sequence */
+	      case "sequence" => doRequest(ctx,"outlier","register:sequence")
 	      
 	      case _ => {}
 	    
@@ -223,10 +223,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "similarity" => {
 	    
 	    subject match {
-	      /* ../register/similarity/features */
-	      case "features" => doRequest(ctx,"similarity","register:features")	
-	      /* ../register/similarity/sequences */
-	      case "sequences" => doRequest(ctx,"similarity","register:sequences")
+	      /* ../register/similarity/feature */
+	      case "feature" => doRequest(ctx,"similarity","register:feature")	
+	      /* ../register/similarity/sequence */
+	      case "sequence" => doRequest(ctx,"similarity","register:sequence")
 	      
 	      case _ => {}
 	      
@@ -338,10 +338,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "outlier" => {
 	    
 	    subject match {
-	      /* ../get/outlier/features */
-	      case "features" => doRequest(ctx,"outlier","get:features")
-	      /* ../get/outlier/sequences */
-	      case "sequences" => doRequest(ctx,"outlier","get:sequences")
+	      /* ../get/outlier/feature */
+	      case "feature" => doRequest(ctx,"outlier","get:feature")
+	      /* ../get/outlier/sequence */
+	      case "sequence" => doRequest(ctx,"outlier","get:sequence")
 	      
 	      case _ => {}
 	    
@@ -351,12 +351,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "series" => {
 	    
 	    subject match {
-	      /* ../get/series/followers */
-	      case "followers" => doRequest(ctx,"series","get:followers")	
-	      /* ../get/series/patterns */
-	      case "patterns" => doRequest(ctx,"series","get:patterns")
-	      /* ../get/series/rules */
-	      case "rules" => doRequest(ctx,"series","get:rules")
+	      /* ../get/series/antecedent */
+	      case "antecedent" => doRequest(ctx,"series","get:antecedent")	
+	      /* ../get/series/consequent */
+	      case "consequent" => doRequest(ctx,"series","get:consequent")	
+	      /* ../get/series/pattern */
+	      case "pattern" => doRequest(ctx,"series","get:pattern")
+	      /* ../get/series/rule */
+	      case "rule" => doRequest(ctx,"series","get:rule")
 	      
 	      case _ => {}
 	      
@@ -366,10 +368,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "similarity" => {
 	    
 	    subject match {
-	      /* ../get/similarity/features */
-	      case "features" => doRequest(ctx,"similarity","get:features")	
-	      /* ../get/similarity/sequences */
-	      case "sequences" => doRequest(ctx,"similarity","get:sequences")
+	      /* ../get/similarity/feature */
+	      case "feature" => doRequest(ctx,"similarity","get:feature")	
+	      /* ../get/similarity/sequence */
+	      case "sequence" => doRequest(ctx,"similarity","get:sequence")
 	      
 	      case _ => {}
 	      
@@ -388,8 +390,8 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "text" => {
 	    
 	    subject match {
-	      /* ../get/text/concepts */
-	      case "concepts" => doRequest(ctx,"text","get:concepts")	
+	      /* ../get/text/concept */
+	      case "concept" => doRequest(ctx,"text","get:concept")	
 	      
 	      case _ => {}
 	      
