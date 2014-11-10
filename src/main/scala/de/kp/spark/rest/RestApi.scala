@@ -285,12 +285,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  case "association" => {
 	    
 	    subject match {	      
-	      /* ../get/association/followers */
-	      case "followers" => doRequest(ctx,"association","get:followers")	      
-	      /* ../get/association/items */
-	      case "items" => doRequest(ctx,"association","get:items")
-	      /* ../get/association/rules */
-	      case "rules" => doRequest(ctx,"rule","get:rules")
+	      /* ../get/association/antecedent */
+	      case "antecedent" => doRequest(ctx,"association","get:antecedent")	      
+	      /* ../get/association/consequent */
+	      case "consequent" => doRequest(ctx,"association","get:consequent")	      
+	      /* ../get/association/transaction */
+	      case "transaction" => doRequest(ctx,"association","get:transaction")
+	      /* ../get/association/rule */
+	      case "rule" => doRequest(ctx,"association","get:rule")
 	      
 	      case _ => {}
 	      
