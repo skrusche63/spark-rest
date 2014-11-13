@@ -19,24 +19,24 @@ package de.kp.spark.rest.actor
 */
 
 import akka.actor.{ActorLogging,Props}
+import akka.routing.RoundRobinRouter
 
 import akka.pattern.ask
 import akka.util.Timeout
 
-import akka.routing.RoundRobinRouter
-
 import de.kp.spark.rest.model._
+
 import scala.concurrent.duration.DurationInt
 
-class FindMaster extends MonitoredActor with ActorLogging {
+class IndexMaster extends MonitoredActor with ActorLogging {
 
-  val router = context.actorOf(Props(new FindActor()).withRouter(RoundRobinRouter(workers)))
+  val router = context.actorOf(Props(new IndexActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     /*
      * Message sent by the scheduler to track the 'heartbeat' of this actor
      */
-    case req:AliveMessage => register("FindMaster")
+    case req:AliveMessage => register("IndexMaster")
     
     case req:ServiceRequest => {
       
@@ -51,10 +51,9 @@ class FindMaster extends MonitoredActor with ActorLogging {
       response.onFailure {
         case result => origin ! failure(req)      
 	  }
-      
     }
     case _ => {}
     
   }
- 
+  
 }

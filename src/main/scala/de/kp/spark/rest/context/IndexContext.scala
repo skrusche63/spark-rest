@@ -1,4 +1,4 @@
-package de.kp.spark.rest.actor
+package de.kp.spark.rest.context
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,23 +18,11 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{Actor,ActorLogging}
+import de.kp.spark.rest.RemoteClient
+import scala.collection.mutable.HashMap
 
-import de.kp.spark.rest.model._
-import de.kp.spark.rest.track.KafkaContext
+object IndexContext extends RemoteContext {
 
-class KafkaActor(kc:KafkaContext) extends Actor with ActorLogging {
-
-  def receive = {
-    
-    case req:TrackRequest => {
-      
-      val origin = sender
-      origin ! new TrackResponse(ResponseStatus.SUCCESS)
-      
-      kc.send(req)
-      
-    }
-    
-  }
+  override val clientPool = HashMap.empty[String,RemoteClient]
+  
 }

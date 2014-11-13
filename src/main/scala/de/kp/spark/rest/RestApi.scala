@@ -39,7 +39,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{FindMaster,InsightMaster,MetaMaster,StatusMaster,TrackMaster,TrainMaster}
+import de.kp.spark.rest.actor.{FindMaster,IndexMaster,MetaMaster,StatusMaster,TrackMaster,TrainMaster}
 import de.kp.spark.rest.cache.ActorMonitor
 
 import de.kp.spark.rest.model._
@@ -54,12 +54,8 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   val (heartbeat,time) = Configuration.actor      
   private val RouteCache = CachingDirectives.routeCache(1000,16,Duration.Inf,Duration("30 min"))
   
-//  /* 
-//   * The master actor that handles all insight requests 
-//   */
-//  val insightMaster = system.actorOf(Props[InsightMaster], name="insight-master")
-//  
   val finder = system.actorOf(Props[FindMaster], name="FindMaster")
+  val indexer = system.actorOf(Props[IndexMaster], name="IndexMaster")
 
   val monitor = system.actorOf(Props[StatusMaster], name="StatusMaster")
   val registrar = system.actorOf(Props[MetaMaster], name="MetaMaster")
@@ -87,6 +83,13 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doGet(ctx,service,subject)
+	    }
+	  }
+    }  ~ 
+    path("index" / Segment / Segment) {(service,subject) => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doIndex(ctx,service,subject)
 	    }
 	  }
     }  ~ 
@@ -121,10 +124,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
      * ecommerce product or service , and a feature refers to a specific
      * dataset
      */
-    path("track" / Segment) {segment => 
+    path("track" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doTrack(ctx, segment)
+	      ctx => doTrack(ctx, service, subject)
 	    }
 	  }
     }  ~ 
@@ -160,7 +163,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        */
       case "actors" => {
         
-        val names = Seq("FindMaster","MetaMaster","StatusMaster","TrackMaster","TrainMaster")
+        val names = Seq("FindMaster","IndexMaster","MetaMaster","StatusMaster","TrackMaster","TrainMaster")
         val response = ActorMonitor.isAlive(names)
         
         ctx.complete(response)
@@ -172,7 +175,89 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
-  
+   
+  private def doIndex[T](ctx:RequestContext,service:String,subject:String) = {
+
+    service match {
+
+	  case "association" => {
+	    /* ../index/association/item */
+	    doRequest(ctx,"association","index")	      
+	  }
+	  case "context" => {
+	    /* ../index/context/feature */
+	    doRequest(ctx,"context","index")	      
+	  }
+      case "decision" => {
+	    /* ../index/decision/feature */
+	    doRequest(ctx,"decision","index")	      
+      }
+      case "intent" => {
+	    
+	    subject match {	      
+	      /* ../index/intent/amount */
+	      case "amount" => doRequest(ctx,"intent","index:amount")
+	      
+	      case _ => {}
+	      
+	    }
+      
+      }
+	  case "outlier" => {
+	    
+	    subject match {
+	      /* ../index/outlier/feature */
+	      case "feature" => doRequest(ctx,"outlier","index:feature")
+	      /* ../index/outlier/sequence */
+	      case "sequence" => doRequest(ctx,"outlier","index:sequence")
+	      
+	      case _ => {}
+	    
+	    }
+	    
+	  }
+	  case "series" => {
+	    /* ../index/series/item */
+	    doRequest(ctx,"series","index")	      
+	  }
+	  case "similarity" => {
+	    
+	    subject match {
+	      /* ../index/similarity/feature */
+	      case "feature" => doRequest(ctx,"similarity","index:feature")	
+	      /* ../index/similarity/sequence */
+	      case "sequence" => doRequest(ctx,"similarity","index:sequence")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
+    }
+    
+  }
+ 
   private def doRegister[T](ctx:RequestContext,service:String,subject:String) = {
 
     service match {
@@ -208,7 +293,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    subject match {
 	      /* ../register/outlier/feature */
 	      case "feature" => doRequest(ctx,"outlier","register:feature")
-	      /* ../get/register/sequence */
+	      /* ../register/outlier/sequence */
 	      case "sequence" => doRequest(ctx,"outlier","register:sequence")
 	      
 	      case _ => {}
@@ -267,14 +352,85 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     ctx.complete(response)
    
   }
+  private def doTrack[T](ctx:RequestContext,service:String,subject:String) = {
 
-  private def doTrack[T](ctx:RequestContext,topic:String) = {
-    
-    val request = new TrackRequest(topic,getRequest(ctx))
-    implicit val timeout:Timeout = DurationInt(time).second
-    
-    val response = ask(tracker,request).mapTo[TrackResponse] 
-    ctx.complete(response)
+    service match {
+
+	  case "association" => {
+	    /* ../track/association/item */
+	    doRequest(ctx,"association","track")	      
+	  }
+	  case "context" => {
+	    /* ../track/context/feature */
+	    doRequest(ctx,"context","track")	      
+	  }
+      case "decision" => {
+	    /* ../track/decision/feature */
+	    doRequest(ctx,"decision","track")	      
+      }
+      case "intent" => {
+	    
+	    subject match {	      
+	      /* ../track/intent/amount */
+	      case "amount" => doRequest(ctx,"intent","track:amount")
+	      
+	      case _ => {}
+	      
+	    }
+      
+      }
+	  case "outlier" => {
+	    
+	    subject match {
+	      /* ../track/outlier/feature */
+	      case "feature" => doRequest(ctx,"outlier","track:feature")
+	      /* ../track/outlier/sequence */
+	      case "sequence" => doRequest(ctx,"outlier","track:sequence")
+	      
+	      case _ => {}
+	    
+	    }
+	    
+	  }
+	  case "series" => {
+	    /* ../track/series/item */
+	    doRequest(ctx,"series","track")	      
+	  }
+	  case "similarity" => {
+	    
+	    subject match {
+	      /* ../track/similarity/feature */
+	      case "feature" => doRequest(ctx,"similarity","track:feature")	
+	      /* ../track/similarity/sequence */
+	      case "sequence" => doRequest(ctx,"similarity","track:sequence")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
+    }
     
   }
 
@@ -516,12 +672,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val req = task.split(":")(0)   
     req match {
       
-      case "get"   => finder
+      case "get"   => finder      
+      case "index"   => indexer
       
       case "status" => monitor
       case "train" => trainer
 
       case "register" => registrar
+      case "track" => tracker
       
       case _ => null
       

@@ -18,43 +18,41 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{ActorLogging,Props}
-
-import akka.pattern.ask
-import akka.util.Timeout
-
-import akka.routing.RoundRobinRouter
+import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.rest.model._
-import scala.concurrent.duration.DurationInt
+import de.kp.spark.rest.context.TrackContext
 
-class FindMaster extends MonitoredActor with ActorLogging {
+class TrackActor() extends Actor with ActorLogging {
 
-  val router = context.actorOf(Props(new FindActor()).withRouter(RoundRobinRouter(workers)))
+  implicit val ec = context.dispatcher
 
   def receive = {
-    /*
-     * Message sent by the scheduler to track the 'heartbeat' of this actor
-     */
-    case req:AliveMessage => register("FindMaster")
     
     case req:ServiceRequest => {
       
-      implicit val timeout:Timeout = DurationInt(time).second
-	  	    
-	  val origin = sender
-      val response = ask(router, req).mapTo[ServiceResponse]
+      val origin = sender
       
+      val service = req.service
+      val message = Serializer.serializeRequest(req)
+      
+      val response = TrackContext.send(service,message).mapTo[String]     
       response.onSuccess {
-        case result => origin ! result
+        case result => origin ! Serializer.deserializeResponse(result)
       }
       response.onFailure {
-        case result => origin ! failure(req)      
+        case result => origin ! failure(req)	 	      
 	  }
       
     }
-    case _ => {}
     
   }
- 
+  
+  private def failure(req:ServiceRequest):ServiceResponse = {
+    
+    val uid = req.data("uid")    
+    new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
+  
+  }
+
 }

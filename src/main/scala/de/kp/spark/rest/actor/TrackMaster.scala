@@ -24,31 +24,12 @@ import akka.routing.RoundRobinRouter
 import akka.pattern.ask
 import akka.util.Timeout
 
-import de.kp.spark.rest.Configuration
-
-import de.kp.spark.rest.track.{ElasticContext,KafkaContext}
 import de.kp.spark.rest.model._
-
 import scala.concurrent.duration.DurationInt
 
 class TrackMaster extends MonitoredActor with ActorLogging {
 
-  val (elastic,kafka) = Configuration.tracking
-  val router = if (elastic) {
-    
-    val ec = new ElasticContext()
-    context.actorOf(Props(new ElasticActor(ec)).withRouter(RoundRobinRouter(workers)))
-    
-  } else {
-      /* Load configuration for kafka */
-      val brokers = Configuration.kafka
-  
-      val kafkaConfig = Map("kafka.brokers" -> brokers)
-      val kc = new KafkaContext(kafkaConfig)
-
-      context.actorOf(Props(new KafkaActor(kc)).withRouter(RoundRobinRouter(workers)))
-    
-  }
+  val router = context.actorOf(Props(new TrackActor()).withRouter(RoundRobinRouter(workers)))
 
   def receive = {
     /*
@@ -56,21 +37,21 @@ class TrackMaster extends MonitoredActor with ActorLogging {
      */
     case req:AliveMessage => register("TrackMaster")
     
-    case req:TrackRequest => {
-     
+    case req:ServiceRequest => {
+      
       implicit val timeout:Timeout = DurationInt(time).second
 	  	    
 	  val origin = sender
-      val response = ask(router, req).mapTo[TrackResponse]
+      val response = ask(router, req).mapTo[ServiceResponse]
       
       response.onSuccess {
         case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! new TrackResponse(ResponseStatus.FAILURE)	      
+        case result => origin ! failure(req)      
 	  }
-      
     }
+    
     case _ => {}
     
   }
