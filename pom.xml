@@ -4,7 +4,7 @@
   <artifactId>spark-rest</artifactId>
   <version>0.2.0</version>
   <name>Spark-REST</name>
-  <description>Implementation of a common REST API to Predictiveworks.</description>
+  <description>Implementation of a common REST API for Predictiveworks.</description>
   <inceptionYear>2010</inceptionYear>
   <licenses>
     <license>

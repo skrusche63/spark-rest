@@ -39,7 +39,7 @@ import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
 
-import de.kp.spark.rest.actor.{FindMaster,IndexMaster,MetaMaster,StatusMaster,TrackMaster,TrainMaster}
+import de.kp.spark.rest.actor.MasterActor
 import de.kp.spark.rest.cache.ActorMonitor
 
 import de.kp.spark.rest.model._
@@ -54,14 +54,14 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   val (heartbeat,time) = Configuration.actor      
   private val RouteCache = CachingDirectives.routeCache(1000,16,Duration.Inf,Duration("30 min"))
   
-  val finder = system.actorOf(Props[FindMaster], name="FindMaster")
-  val indexer = system.actorOf(Props[IndexMaster], name="IndexMaster")
+  val finder = system.actorOf(Props(new MasterActor("FindMaster")), name="FindMaster")
+  val indexer = system.actorOf(Props(new MasterActor("IndexMaster")), name="IndexMaster")
 
-  val monitor = system.actorOf(Props[StatusMaster], name="StatusMaster")
-  val registrar = system.actorOf(Props[MetaMaster], name="MetaMaster")
+  val monitor = system.actorOf(Props(new MasterActor("StatusMaster")), name="StatusMaster")
+  val registrar = system.actorOf(Props(new MasterActor("MetaMaster")), name="MetaMaster")
   
-  val tracker = system.actorOf(Props[TrackMaster], name="TrackMaster")
-  val trainer = system.actorOf(Props[TrainMaster], name="TrainMaster")
+  val tracker = system.actorOf(Props(new MasterActor("TrackMaster")), name="TrackMaster")
+  val trainer = system.actorOf(Props(new MasterActor("TrainMaster")), name="TrainMaster")
  
   def start() {
     RestService.start(routes,system,host,port)
@@ -178,25 +178,21 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
    
   private def doIndex[T](ctx:RequestContext,service:String,subject:String) = {
 
+    val task = "index"    
     service match {
 
-	  case "association" => {
-	    /* ../index/association/item */
-	    doRequest(ctx,"association","index")	      
-	  }
-	  case "context" => {
-	    /* ../index/context/feature */
-	    doRequest(ctx,"context","index")	      
-	  }
-      case "decision" => {
-	    /* ../index/decision/feature */
-	    doRequest(ctx,"decision","index")	      
-      }
+      /* ../index/association/item */
+	  case "association" => doRequest(ctx,"association",task)	      
+	  /* ../index/context/feature */
+	  case "context" => doRequest(ctx,"context",task)	      
+	  /* ../index/decision/feature */
+      case "decision" => doRequest(ctx,"decision",task)	      
+      
       case "intent" => {
 	    
 	    subject match {	      
 	      /* ../index/intent/amount */
-	      case "amount" => doRequest(ctx,"intent","index:amount")
+	      case "amount" => doRequest(ctx,"intent",task+":amount")
 	      
 	      case _ => {}
 	      
@@ -207,26 +203,25 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../index/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier","index:feature")
+	      case "feature" => doRequest(ctx,"outlier",task+":feature")
 	      /* ../index/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier","index:sequence")
+	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
 	      
 	      case _ => {}
 	    
 	    }
 	    
 	  }
-	  case "series" => {
-	    /* ../index/series/item */
-	    doRequest(ctx,"series","index")	      
-	  }
+	  /* ../index/series/item */
+	  case "series" => doRequest(ctx,"series",task)	      
+	  
 	  case "similarity" => {
 	    
 	    subject match {
 	      /* ../index/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity","index:feature")	
+	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
 	      /* ../index/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity","index:sequence")
+	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
 	      
 	      case _ => {}
 	      
@@ -259,29 +254,24 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   }
  
   private def doRegister[T](ctx:RequestContext,service:String,subject:String) = {
-
+    
+    val task = "register"
     service match {
-
-	  case "association" => {
-	    /* ../register/association/fields */
-	    doRequest(ctx,"association","register")	      
-	  }
-	  case "context" => {
-	    /* ../register/context/features */
-	    doRequest(ctx,"context","register")	      
-	  }
-      case "decision" => {
-	    /* ../register/decision/features */
-	    doRequest(ctx,"decision","register")	      
-      }
+      /* ../register/association/field */
+	  case "association" => doRequest(ctx,"association",task)	      
+	  /* ../register/context/feature */
+	  case "context" => doRequest(ctx,"context",task)	      
+	  /* ../register/decision/feature */
+      case "decision" => doRequest(ctx,"decision",task)	      
+      
       case "intent" => {
 	    
 	    subject match {	      
 	      /* ../register/intent/loyalty */
-	      case "loyalty" => doRequest(ctx,"intent","register:loyalty")
+	      case "loyalty" => doRequest(ctx,"intent",task+":loyalty")
 
 	      /* ../register/intent/purchase */
-	      case "purchase" => doRequest(ctx,"intent","register:purchase")
+	      case "purchase" => doRequest(ctx,"intent",task+":purchase")
 	      
 	      case _ => {}
 	      
@@ -292,26 +282,25 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../register/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier","register:feature")
+	      case "feature" => doRequest(ctx,"outlier",task+":feature")
 	      /* ../register/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier","register:sequence")
+	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
 	      
 	      case _ => {}
 	    
 	    }
 	    
 	  }
-	  case "series" => {
-	    /* ../register/series/fields */
-	    doRequest(ctx,"series","register")	      
-	  }
+	  /* ../register/series/field */
+	  case "series" => doRequest(ctx,"series","register")	      
+	  
 	  case "similarity" => {
 	    
 	    subject match {
 	      /* ../register/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity","register:feature")	
+	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
 	      /* ../register/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity","register:sequence")
+	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
 	      
 	      case _ => {}
 	      
@@ -344,35 +333,37 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
   }
 
   private def doQuery[T](ctx:RequestContext,service:String="insight") = {
-     
-    val request = new InsightRequest(service,getRequest(ctx))      
-    implicit val timeout:Timeout = DurationInt(time).second
-    
+   
     val response = "Query is not implemented yet."
     ctx.complete(response)
    
   }
+
+  /**
+   * A track request has the following request url: /track/{service}/{topic}
+   * 
+   * Topics are from the set: amount, item, feature, sequence
+   * 
+   */
   private def doTrack[T](ctx:RequestContext,service:String,subject:String) = {
 
+    val task = "track"
     service match {
 
-	  case "association" => {
-	    /* ../track/association/item */
-	    doRequest(ctx,"association","track")	      
-	  }
-	  case "context" => {
-	    /* ../track/context/feature */
-	    doRequest(ctx,"context","track")	      
-	  }
-      case "decision" => {
-	    /* ../track/decision/feature */
-	    doRequest(ctx,"decision","track")	      
-      }
+	  /* ../track/association/item */
+	  case "association" => doRequest(ctx,"association",task)	      
+
+      /* ../track/context/feature */
+	  case "context" => doRequest(ctx,"context",task)	      
+	  
+	  /* ../track/decision/feature */
+      case "decision" => doRequest(ctx,"decision",task)	      
+      
       case "intent" => {
 	    
 	    subject match {	      
 	      /* ../track/intent/amount */
-	      case "amount" => doRequest(ctx,"intent","track:amount")
+	      case "amount" => doRequest(ctx,"intent",task+":amount")
 	      
 	      case _ => {}
 	      
@@ -383,26 +374,25 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../track/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier","track:feature")
+	      case "feature" => doRequest(ctx,"outlier",task+":feature")
 	      /* ../track/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier","track:sequence")
+	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
 	      
 	      case _ => {}
 	    
 	    }
 	    
 	  }
-	  case "series" => {
-	    /* ../track/series/item */
-	    doRequest(ctx,"series","track")	      
-	  }
+	  /* ../track/series/item */
+	  case "series" => doRequest(ctx,"series",task)	
+	  
 	  case "similarity" => {
 	    
 	    subject match {
 	      /* ../track/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity","track:feature")	
+	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
 	      /* ../track/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity","track:sequence")
+	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
 	      
 	      case _ => {}
 	      
@@ -436,19 +426,20 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 
   private def doGet[T](ctx:RequestContext,service:String,subject:String) = {
 
+    val task = "get"
     service match {
 
 	  case "association" => {
 	    
 	    subject match {	      
 	      /* ../get/association/antecedent */
-	      case "antecedent" => doRequest(ctx,"association","get:antecedent")	      
+	      case "antecedent" => doRequest(ctx,"association",task+":antecedent")	      
 	      /* ../get/association/consequent */
-	      case "consequent" => doRequest(ctx,"association","get:consequent")	      
+	      case "consequent" => doRequest(ctx,"association",task+":consequent")	      
 	      /* ../get/association/transaction */
-	      case "transaction" => doRequest(ctx,"association","get:transaction")
+	      case "transaction" => doRequest(ctx,"association",task+":transaction")
 	      /* ../get/association/rule */
-	      case "rule" => doRequest(ctx,"association","get:rule")
+	      case "rule" => doRequest(ctx,"association",task+":rule")
 	      
 	      case _ => {}
 	      
@@ -459,7 +450,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {	      
 	      /* ../get/context/prediction */
-	      case "prediction" => doRequest(ctx,"context","get:prediction")
+	      case "prediction" => doRequest(ctx,"context",task+":prediction")
 	      
 	      case _ => {}
 	      
@@ -470,7 +461,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {	      
 	      /* ../get/decision/prediction */
-	      case "prediction" => doRequest(ctx,"decision","get:prediction")
+	      case "prediction" => doRequest(ctx,"decision",task+":prediction")
 	      
 	      case _ => {}
 	      
@@ -481,10 +472,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {	      
 	      /* ../get/intent/loyalty */
-	      case "loyalty" => doRequest(ctx,"intent","get:loyalty")
+	      case "loyalty" => doRequest(ctx,"intent",task+":loyalty")
 
 	      /* ../get/intent/purchase */
-	      case "purchase" => doRequest(ctx,"intent","get:purchase")
+	      case "purchase" => doRequest(ctx,"intent",task+":purchase")
 	      
 	      case _ => {}
 	      
@@ -495,9 +486,9 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../get/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier","get:feature")
+	      case "feature" => doRequest(ctx,"outlier",task+":feature")
 	      /* ../get/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier","get:sequence")
+	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
 	      
 	      case _ => {}
 	    
@@ -508,13 +499,13 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../get/series/antecedent */
-	      case "antecedent" => doRequest(ctx,"series","get:antecedent")	
+	      case "antecedent" => doRequest(ctx,"series",task+":antecedent")	
 	      /* ../get/series/consequent */
-	      case "consequent" => doRequest(ctx,"series","get:consequent")	
+	      case "consequent" => doRequest(ctx,"series",task+":consequent")	
 	      /* ../get/series/pattern */
-	      case "pattern" => doRequest(ctx,"series","get:pattern")
+	      case "pattern" => doRequest(ctx,"series",task+":pattern")
 	      /* ../get/series/rule */
-	      case "rule" => doRequest(ctx,"series","get:rule")
+	      case "rule" => doRequest(ctx,"series",task+":rule")
 	      
 	      case _ => {}
 	      
@@ -525,9 +516,9 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../get/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity","get:feature")	
+	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
 	      /* ../get/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity","get:sequence")
+	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
 	      
 	      case _ => {}
 	      
@@ -547,7 +538,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../get/text/concept */
-	      case "concept" => doRequest(ctx,"text","get:concept")	
+	      case "concept" => doRequest(ctx,"text",task+":concept")	
 	      
 	      case _ => {}
 	      
@@ -560,52 +551,21 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
-  private def doTrain[T](ctx:RequestContext,service:String) = {
-
-    /* Train requests are distinguished by their targeted services */
-    service match {
-      
-	  case "association" => doRequest(ctx,"association","train")
-
-	  case "context"  => doRequest(ctx,"context","train")
-	  case "decision" => doRequest(ctx,"decision","train")
-
-	  case "intent"  => doRequest(ctx,"intent","train")
-	  case "outlier" => doRequest(ctx,"outlier","train")
-
-	  case "series"     => doRequest(ctx,"series","train")
-	  case "similarity" => doRequest(ctx,"similarity","train")
-
-	  case "social" => doRequest(ctx,"social","train")
-	  case "text"   => doRequest(ctx,"text","train")
-	  
-    }
-  
-  }
 
   private def doStatus[T](ctx:RequestContext,service:String) = {
 
-    /* Status requests are distinguished by their targeted services */
-    service match {
-      
-	  case "association" => doRequest(ctx,"association","status")
-
-	  case "context"  => doRequest(ctx,"context","status")
-	  case "decision" => doRequest(ctx,"decision","status")
-
-	  case "intent"  => doRequest(ctx,"intent","status")
-	  case "outlier" => doRequest(ctx,"outlier","status")
-
-	  case "series"     => doRequest(ctx,"series","status")
-	  case "similarity" => doRequest(ctx,"similarity","status")
-
-	  case "social" => doRequest(ctx,"social","status")
-	  case "text"   => doRequest(ctx,"text","status")
-      
-	  case _ => {}
-	  
+    if (Services.isService(service) == true) {
+      doRequest(ctx,service,"status")
     }
    
+  }
+  
+  private def doTrain[T](ctx:RequestContext,service:String) = {
+
+    if (Services.isService(service) == true) {
+      doRequest(ctx,service,"train")
+    }
+  
   }
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
@@ -642,19 +602,6 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
       
     body.asInstanceOf[Map[String,String]]
-    
-  }
-  /**
-   * This method returns the 'raw' body provided with a Http request;
-   * it is e.g. used to access the meta service to register metadata
-   * specifications
-   */
-  private def getBodyAsString(ctx:RequestContext):String = {
-   
-    val httpRequest = ctx.request
-    val httpEntity  = httpRequest.entity    
-
-    httpEntity.data.asString
     
   }
   

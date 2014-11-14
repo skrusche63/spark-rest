@@ -26,15 +26,16 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
+import akka.routing.RoundRobinRouter
 
-import de.kp.spark.rest.Configuration
+import de.kp.spark.rest.{Configuration,RemoteContext}
 import de.kp.spark.rest.model._
 
 import de.kp.spark.rest.cache.ActorMonitor
 
 import scala.concurrent.duration.DurationInt
 
-trait MonitoredActor extends Actor {
+class MonitoredActor(name:String) extends Actor with ActorLogging {
 
   val (heartbeat,time) = Configuration.actor      
   val (duration,retries,workers) = Configuration.router  
@@ -45,10 +46,41 @@ trait MonitoredActor extends Actor {
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(duration).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
   }
+
+  protected val ctx = new RemoteContext()
+  protected val router = context.actorOf(Props(new WorkerActor(ctx)).withRouter(RoundRobinRouter(workers)))
   
   override def postStop() {
     scheduledTask.cancel()
   }  
+
+  def receive = {
+    /*
+     * Message sent by the scheduler to track the 'heartbeat' of this actor
+     */
+    case req:AliveMessage => register(name)
+    /*
+     * Message sent to interact with a remote actor specifying the access
+     * point of a certain prediction engine, e.g. association, context etc
+     */
+    case req:ServiceRequest => {
+      
+      implicit val timeout:Timeout = DurationInt(time).second
+	  	    
+	  val origin = sender
+      val response = ask(router, req).mapTo[ServiceResponse]
+      
+      response.onSuccess {
+        case result => origin ! result
+      }
+      response.onFailure {
+        case result => origin ! failure(req)      
+	  }
+      
+    }
+    case _ => {}
+    
+  }
    
   def failure(req:ServiceRequest):ServiceResponse = {
     

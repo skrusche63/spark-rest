@@ -1,4 +1,4 @@
-package de.kp.spark.rest.context
+package de.kp.spark.rest.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,11 +18,10 @@ package de.kp.spark.rest.context
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.RemoteClient
-import scala.collection.mutable.HashMap
+import de.kp.spark.rest.RemoteContext
 
-object IndexContext extends RemoteContext {
+class WorkerActor(ctx:RemoteContext) extends BaseActor {
 
-  override val clientPool = HashMap.empty[String,RemoteClient]
-  
+  override def getResponse(service:String,message:String) = ctx.send(service,message).mapTo[String] 
+
 }

@@ -1,4 +1,4 @@
-package de.kp.spark.rest.context
+package de.kp.spark.rest
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-REST project
@@ -18,11 +18,22 @@ package de.kp.spark.rest.context
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.RemoteClient
+import scala.concurrent.Future
 import scala.collection.mutable.HashMap
 
-object PredictContext extends RemoteContext {
+class RemoteContext {
 
-  override val clientPool = HashMap.empty[String,RemoteClient]
-  
+  val clientPool = HashMap.empty[String,RemoteClient]
+ 
+  def send(service:String,message:String):Future[Any] = {
+   
+    if (clientPool.contains(service) == false) {
+      clientPool += service -> new RemoteClient(service)      
+    }
+   
+    val client = clientPool(service)
+    client.send(message)
+ 
+  }
+
 }

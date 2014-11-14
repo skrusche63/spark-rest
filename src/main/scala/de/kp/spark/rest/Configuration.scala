@@ -45,15 +45,6 @@ object Configuration {
     size
     
   }
-  
-  def kafka():String = {
-  
-    val cfg = config.getConfig("kafka")
-    val brokers = cfg.getString("brokers")  
-    
-    brokers
-
-  }
 
   def router():(Int,Int,Int) = {
   
@@ -64,17 +55,6 @@ object Configuration {
     val workers = cfg.getInt("workers")
     
     (time,retries,workers)
-
-  }
-
-  def tracking():(Boolean,Boolean) = {
-  
-    val cfg = config.getConfig("tracking")
-    
-    val elastic = cfg.getBoolean("elastic.enabled")  
-    val kafka   = cfg.getBoolean("kafka.enabled")  
-    
-    (elastic,kafka)
 
   }
 

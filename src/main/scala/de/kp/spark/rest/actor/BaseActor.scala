@@ -18,44 +18,43 @@ package de.kp.spark.rest.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.{ActorLogging,Props}
-
-import akka.pattern.ask
-import akka.util.Timeout
-
-import akka.routing.RoundRobinRouter
-
+import akka.actor.{Actor,ActorLogging}
 import de.kp.spark.rest.model._
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.Future
 
-class StatusMaster extends MonitoredActor with ActorLogging {
+abstract class BaseActor extends Actor with ActorLogging {
 
-  val router = context.actorOf(Props(new StatusActor()).withRouter(RoundRobinRouter(workers)))
-  
+  implicit val ec = context.dispatcher
+
   def receive = {
-    /*
-     * Message sent by the scheduler to track the 'heartbeat' of this actor
-     */
-    case req:AliveMessage => register("StatusMaster")
     
     case req:ServiceRequest => {
       
-      implicit val timeout:Timeout = DurationInt(time).second
-	  	    
-	  val origin = sender
-      val response = ask(router, req).mapTo[ServiceResponse]
+      val origin = sender
       
+      val service = req.service
+      val message = Serializer.serializeRequest(req)
+      
+      val response = getResponse(service,message)     
       response.onSuccess {
-        case result => origin ! result
+        case result => origin ! Serializer.deserializeResponse(result)
       }
       response.onFailure {
-        case result => origin ! failure(req)      
+        case result => origin ! failure(req)	 	      
 	  }
       
     }
-    case _ => {}
     
   }
- 
+  
+  protected def failure(req:ServiceRequest):ServiceResponse = {
+    
+    val uid = req.data("uid")    
+    new ServiceResponse(req.service,req.task,Map("uid" -> uid),ResponseStatus.FAILURE)	
+  
+  }
+
+  protected def getResponse(service:String,message:String):Future[String]
+
 }
