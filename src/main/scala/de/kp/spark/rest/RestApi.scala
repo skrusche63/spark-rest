@@ -181,47 +181,71 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     val task = "index"    
     service match {
 
-      /* ../index/association/item */
-	  case "association" => doRequest(ctx,"association",task)	      
+ 	  case "association" => {
+	    
+	    subject match {
+          /* ../index/association/item */
+	      case "item" => doRequest(ctx,service,task+":item")
+          /* ../index/association/rule */
+	      case "rule" => doRequest(ctx,service,task+":rule")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }	      
 	  /* ../index/context/feature */
-	  case "context" => doRequest(ctx,"context",task)	      
+	  case "context" => doRequest(ctx,service,task)	      
 	  /* ../index/decision/feature */
-      case "decision" => doRequest(ctx,"decision",task)	      
+      case "decision" => doRequest(ctx,service,task)	      
       
       case "intent" => {
 	    
 	    subject match {	      
 	      /* ../index/intent/amount */
-	      case "amount" => doRequest(ctx,"intent",task+":amount")
+	      case "amount" => doRequest(ctx,service,task+":amount")
 	      
 	      case _ => {}
 	      
 	    }
       
       }
-	  case "outlier" => {
+
+      case "outlier" => {
 	    
 	    subject match {
 	      /* ../index/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier",task+":feature")
+	      case "feature" => doRequest(ctx,service,task+":feature")
 	      /* ../index/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
+	      case "sequence" => doRequest(ctx,service,task+":sequence")
 	      
 	      case _ => {}
 	    
 	    }
 	    
 	  }
-	  /* ../index/series/item */
-	  case "series" => doRequest(ctx,"series",task)	      
+
+	  case "series" => {
+	    
+	    subject match {
+          /* ../index/series/item */
+	      case "item" => doRequest(ctx,service,task+":item")
+          /* ../index/series/rule */
+	      case "rule" => doRequest(ctx,service,task+":rule")
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }	      
 	  
 	  case "similarity" => {
 	    
 	    subject match {
 	      /* ../index/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
+	      case "feature" => doRequest(ctx,service,task+":feature")	
 	      /* ../index/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
+	      case "sequence" => doRequest(ctx,service,task+":sequence")
 	      
 	      case _ => {}
 	      
