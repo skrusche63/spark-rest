@@ -79,23 +79,27 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("get" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doGet(ctx,service,subject)
-	    }
-	  }
-    }  ~ 
-    path("index" / Segment / Segment) {(service,subject) => 
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doIndex(ctx,service,subject)
-	    }
-	  }
-    }  ~ 
     /*
-     * This request provides a metadata specification that has to be
-     * registered in a Redis instance by the 'meta' service
+     * A 'fields' request supports the retrieval of the field
+     * or metadata specificiations that are associated with
+     * a certain training task (uid).
+     * 
+     * The approach actually supported enables the registration
+     * of field specifications on a per uid basis, i.e. each
+     * task may have its own fields. Requests that have to
+     * refer to the same fields must provide the SAME uid
+     */
+    path("fields" / Segment) {subject =>   
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doFields(ctx,subject)
+	    }
+	  }
+    }  ~  
+    /*
+     * A 'register' request supports the registration of a field
+     * or metadata specification that describes the fields used
+     * to span the training dataset.
      */
     path("register" / Segment / Segment) {(service,subject) => 
 	  post {
@@ -104,17 +108,41 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    }
 	  }
     }  ~ 
-    path("query") {
+    /*
+     * 'index' and 'track' requests refer to the tracking functionality of
+     * Predictiveworks; while 'index' prepares a certain Elasticsearch index, 
+     * 'track' is used to gather training data.
+     */
+    path("index" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doQuery(ctx)
+	      ctx => doIndex(ctx,service,subject)
 	    }
 	  }
     }  ~ 
-    path("status" / Segment) {segment => 
+    path("track" / Segment / Segment) {(service,subject) => 
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx,segment)
+	      ctx => doTrack(ctx, service, subject)
+	    }
+	  }
+    }  ~ 
+    /*
+     * A 'status' request supports the retrieval of the status
+     * with respect to a certain training task (uid). The latest
+     * status or all stati of a certain task are returned.
+     */
+    path("status" / Segment / Segment) {(service,subject) =>  
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doStatus(ctx,service,subject)
+	    }
+	  }
+    }  ~ 
+    path("get" / Segment / Segment) {(service,subject) => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doGet(ctx,service,subject)
 	    }
 	  }
     }  ~ 
@@ -124,17 +152,10 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
      * ecommerce product or service , and a feature refers to a specific
      * dataset
      */
-    path("track" / Segment / Segment) {(service,subject) => 
+    path("train" / Segment / Segment) {(service,subject) =>
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doTrack(ctx, service, subject)
-	    }
-	  }
-    }  ~ 
-    path("train" / Segment) {segment =>
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx,segment)
+	      ctx => doTrain(ctx,service,subject)
 	    }
 	  }
     }  ~ 
@@ -152,6 +173,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
       }
     }
   }
+
   /**
    * Common method to handle all admin requests sent to the REST API
    */
@@ -175,81 +197,137 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
-   
+
+  /**
+   * 'fields' and 'register' requests refer to the metadata management of
+   * Predictiveworks; for a certain task (uid) and a specific model (name), 
+   * a specification of the respective data fields can be registered and 
+   * retrieved from a Redis database.
+   */
+  private def doFields[T](ctx:RequestContext,service:String) = doRequest(ctx,service,"fields")
+ 
+  private def doRegister[T](ctx:RequestContext,service:String,subject:String) = {
+    
+    val task = "register" + ":" + subject
+    service match {
+      
+	  case "association" => {
+	    
+	    val topics = List("item")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }	      
+	  case "context" => {
+	    
+	    val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }	      
+      case "decision" => {
+	    
+	    val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+      }      
+      
+      case "intent" => {
+	    
+	    val topics = List("amount")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+      
+      }
+	  case "outlier" => {
+	    
+	    val topics = List("feature","product")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "series" => {
+	    
+	    val topics = List("item")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }	      
+	  case "similarity" => {
+	    
+	    val topics = List("feature","sequence")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
+    }
+    
+  }
+  
+  /**
+   * 'index' & 'track' requests support data registration in an Elasticsearch index
+   */   
   private def doIndex[T](ctx:RequestContext,service:String,subject:String) = {
 
-    val task = "index"    
+    val task = "index" + ":" + subject   
     service match {
 
  	  case "association" => {
 	    
-	    subject match {
-          /* ../index/association/item */
-	      case "item" => doRequest(ctx,service,task+":item")
-          /* ../index/association/rule */
-	      case "rule" => doRequest(ctx,service,task+":rule")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("item","rule")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }	      
-	  /* ../index/context/feature */
-	  case "context" => doRequest(ctx,service,task)	      
-	  /* ../index/decision/feature */
-      case "decision" => doRequest(ctx,service,task)	      
-      
+	  case "context" => {
+	    
+	    val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }	      
+      case "decision" => {
+	    
+	    val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+        
+      }	      
       case "intent" => {
 	    
-	    subject match {	      
-	      /* ../index/intent/amount */
-	      case "amount" => doRequest(ctx,service,task+":amount")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("amount")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
       
       }
-
       case "outlier" => {
 	    
-	    subject match {
-	      /* ../index/outlier/feature */
-	      case "feature" => doRequest(ctx,service,task+":feature")
-	      /* ../index/outlier/sequence */
-	      case "sequence" => doRequest(ctx,service,task+":sequence")
-	      
-	      case _ => {}
-	    
-	    }
+	    val topics = List("feature","product")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
-
 	  case "series" => {
 	    
-	    subject match {
-          /* ../index/series/item */
-	      case "item" => doRequest(ctx,service,task+":item")
-          /* ../index/series/rule */
-	      case "rule" => doRequest(ctx,service,task+":rule")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("item","rule")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }	      
 	  
 	  case "similarity" => {
 	    
-	    subject match {
-	      /* ../index/similarity/feature */
-	      case "feature" => doRequest(ctx,service,task+":feature")	
-	      /* ../index/similarity/sequence */
-	      case "sequence" => doRequest(ctx,service,task+":sequence")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("feature","sequence")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
 	  case "social" => {
@@ -276,205 +354,121 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
- 
-  private def doRegister[T](ctx:RequestContext,service:String,subject:String) = {
-    
-    val task = "register"
-    service match {
-      /* ../register/association/field */
-	  case "association" => doRequest(ctx,"association",task)	      
-	  /* ../register/context/feature */
-	  case "context" => doRequest(ctx,"context",task)	      
-	  /* ../register/decision/feature */
-      case "decision" => doRequest(ctx,"decision",task)	      
-      
-      case "intent" => {
-	    
-	    subject match {	      
-	      /* ../register/intent/loyalty */
-	      case "loyalty" => doRequest(ctx,"intent",task+":loyalty")
-
-	      /* ../register/intent/purchase */
-	      case "purchase" => doRequest(ctx,"intent",task+":purchase")
-	      
-	      case _ => {}
-	      
-	    }
-      
-      }
-	  case "outlier" => {
-	    
-	    subject match {
-	      /* ../register/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier",task+":feature")
-	      /* ../register/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
-	      
-	      case _ => {}
-	    
-	    }
-	    
-	  }
-	  /* ../register/series/field */
-	  case "series" => doRequest(ctx,"series","register")	      
-	  
-	  case "similarity" => {
-	    
-	    subject match {
-	      /* ../register/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
-	      /* ../register/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
-	      
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-	  case "social" => {
-	    
-	    subject match {
-	      /* Not implemented yet */
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-	  case "text" => {
-	    
-	    subject match {
-	      /* Not implemented yet */
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-
-	  case _ => {}
-	  
-    }
-    
-  }
-
-  private def doQuery[T](ctx:RequestContext,service:String="insight") = {
-   
-    val response = "Query is not implemented yet."
-    ctx.complete(response)
-   
-  }
-
-  /**
-   * A track request has the following request url: /track/{service}/{topic}
-   * 
-   * Topics are from the set: amount, item, feature, sequence
-   * 
-   */
   private def doTrack[T](ctx:RequestContext,service:String,subject:String) = {
 
-    val task = "track"
-    service match {
-
-	  /* ../track/association/item */
-	  case "association" => doRequest(ctx,"association",task)	      
-
-      /* ../track/context/feature */
-	  case "context" => doRequest(ctx,"context",task)	      
-	  
-	  /* ../track/decision/feature */
-      case "decision" => doRequest(ctx,"decision",task)	      
-      
-      case "intent" => {
-	    
-	    subject match {	      
-	      /* ../track/intent/amount */
-	      case "amount" => doRequest(ctx,"intent",task+":amount")
-	      
-	      case _ => {}
-	      
-	    }
-      
-      }
-	  case "outlier" => {
-	    
-	    subject match {
-	      /* ../track/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier",task+":feature")
-	      /* ../track/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
-	      
-	      case _ => {}
-	    
-	    }
-	    
-	  }
-	  /* ../track/series/item */
-	  case "series" => doRequest(ctx,"series",task)	
-	  
-	  case "similarity" => {
-	    
-	    subject match {
-	      /* ../track/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
-	      /* ../track/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
-	      
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-	  case "social" => {
-	    
-	    subject match {
-	      /* Not implemented yet */
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-	  case "text" => {
-	    
-	    subject match {
-	      /* Not implemented yet */
-	      case _ => {}
-	      
-	    }
-	    
-	  }
-
-	  case _ => {}
-	  
-    }
-    
-  }
-
-  private def doGet[T](ctx:RequestContext,service:String,subject:String) = {
-
-    val task = "get"
+    val task = "track" + ":" + subject
     service match {
 
 	  case "association" => {
 	    
-	    subject match {	      
-	      /* ../get/association/antecedent */
-	      case "antecedent" => doRequest(ctx,"association",task+":antecedent")	      
-	      /* ../get/association/consequent */
-	      case "consequent" => doRequest(ctx,"association",task+":consequent")	      
-	      /* ../get/association/transaction */
-	      case "transaction" => doRequest(ctx,"association",task+":transaction")
-	      /* ../get/association/rule */
-	      case "rule" => doRequest(ctx,"association",task+":rule")
-	      
+	    val topics = List("item")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+
+	  }
+	  case "context" => {
+	    
+	    val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+      case "decision" => {
+	    
+	    val topics = List("item")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+
+      }      
+      case "intent" => {
+	    
+        val topics = List("amount")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+     
+      }
+	  case "outlier" => {
+	    
+	    val topics = List("feature","product")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "series" => {
+	    
+	    val topics = List("item")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }	
+	  case "similarity" => {
+	    
+	    val topics = List("feature","sequence")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
 	      case _ => {}
 	      
 	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
+    }
+    
+  }
+  /**
+   * 'status' is an administration request to determine whether a certain data
+   * mining task has been finished or not; the only parameter required for status 
+   * requests is the unique identifier of a certain task
+   */
+  private def doStatus[T](ctx:RequestContext,service:String,subject:String) = {
+    
+    subject match {
+      /*
+       * Retrieve the 'latest' status information about a certain
+       * data mining or model building task.
+       */
+      case "latest" => doRequest(ctx,service,"status:latest")
+      /*
+       * Retrieve 'all' stati assigned to a certain data mining
+       * or model building task.
+       */
+      case "all" => doRequest(ctx,service,"status:all")
+      
+      case _ => {/* do nothing */}
+    
+    }
+  
+  }
+
+  private def doGet[T](ctx:RequestContext,service:String,subject:String) = {
+
+    val task = "get" +":" + subject
+    service match {
+
+	  case "association" => {
+	    
+	    val topics = List("antecedent","consequent","transaction","rule")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 
 	  }
 	  case "context" => {
 	    
 	    subject match {	      
-	      /* ../get/context/prediction */
-	      case "prediction" => doRequest(ctx,"context",task+":prediction")
+	      
+	      /* ../get/context/feature */
+	      case "feature" => doRequest(ctx,service,"predict:feature")
+	      /* ../get/context/similar */
+	      case "similar" => doRequest(ctx,service,"similar:feature")
 	      
 	      case _ => {}
 	      
@@ -483,70 +477,32 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  }
       case "decision" => {
 	    
-	    subject match {	      
-	      /* ../get/decision/prediction */
-	      case "prediction" => doRequest(ctx,"decision",task+":prediction")
-	      
-	      case _ => {}
-	      
-	    }
+        val topics = List("feature")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
       
       }
       case "intent" => {
 	    
-	    subject match {	      
-	      /* ../get/intent/loyalty */
-	      case "loyalty" => doRequest(ctx,"intent",task+":loyalty")
-
-	      /* ../get/intent/purchase */
-	      case "purchase" => doRequest(ctx,"intent",task+":purchase")
-	      
-	      case _ => {}
-	      
-	    }
+        val topics = List("loyalty","purchase")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
       
       }
 	  case "outlier" => {
 	    
-	    subject match {
-	      /* ../get/outlier/feature */
-	      case "feature" => doRequest(ctx,"outlier",task+":feature")
-	      /* ../get/outlier/sequence */
-	      case "sequence" => doRequest(ctx,"outlier",task+":sequence")
-	      
-	      case _ => {}
-	    
-	    }
+	    val topics = List("feature","product")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
 	  case "series" => {
 	    
-	    subject match {
-	      /* ../get/series/antecedent */
-	      case "antecedent" => doRequest(ctx,"series",task+":antecedent")	
-	      /* ../get/series/consequent */
-	      case "consequent" => doRequest(ctx,"series",task+":consequent")	
-	      /* ../get/series/pattern */
-	      case "pattern" => doRequest(ctx,"series",task+":pattern")
-	      /* ../get/series/rule */
-	      case "rule" => doRequest(ctx,"series",task+":rule")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("antecedent","consequent","pattern","rule")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
 	  case "similarity" => {
 	    
-	    subject match {
-	      /* ../get/similarity/feature */
-	      case "feature" => doRequest(ctx,"similarity",task+":feature")	
-	      /* ../get/similarity/sequence */
-	      case "sequence" => doRequest(ctx,"similarity",task+":sequence")
-	      
-	      case _ => {}
-	      
-	    }
+	    val topics = List("feature","sequence")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
 	  case "social" => {
@@ -562,7 +518,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	    
 	    subject match {
 	      /* ../get/text/concept */
-	      case "concept" => doRequest(ctx,"text",task+":concept")	
+	      case "concept" => doRequest(ctx,"text","get:concept")	
 	      
 	      case _ => {}
 	      
@@ -575,19 +531,77 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
     }
     
   }
-
-  private def doStatus[T](ctx:RequestContext,service:String) = {
-
-    if (Services.isService(service) == true) {
-      doRequest(ctx,service,"status")
-    }
-   
-  }
   
-  private def doTrain[T](ctx:RequestContext,service:String) = {
+  private def doTrain[T](ctx:RequestContext,service:String,subject:String) = {
 
-    if (Services.isService(service) == true) {
-      doRequest(ctx,service,"train")
+    val task = "train" +":" + subject
+    service match {
+
+	  case "association" => {
+	    
+	    val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+
+	  }
+	  case "context" => {
+	    
+	    val topics = List("matrix","model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+      case "decision" => {
+	    
+        val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+      
+      }
+      case "intent" => {
+	    
+        val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+      
+      }
+	  case "outlier" => {
+	    
+	    val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "series" => {
+	    
+	    val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "similarity" => {
+	    
+	    val topics = List("model")
+	    if (topics.contains(subject)) doRequest(ctx,service,task)	
+	    
+	  }
+	  case "social" => {
+	    
+	    subject match {
+	      /* Not implemented yet */
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+	  case "text" => {
+	    
+	    subject match {
+	      /* ../get/text/concept */
+	      case "concept" => doRequest(ctx,"text","train:concept")	
+	      
+	      case _ => {}
+	      
+	    }
+	    
+	  }
+
+	  case _ => {}
+	  
     }
   
   }
