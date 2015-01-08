@@ -250,7 +250,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  }	      
 	  case "similarity" => {
 	    
-	    val topics = List("feature","sequence")
+	    val topics = List("sequence","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
@@ -326,7 +326,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  
 	  case "similarity" => {
 	    
-	    val topics = List("feature","sequence")
+	    val topics = List("sequence","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
@@ -397,7 +397,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  }	
 	  case "similarity" => {
 	    
-	    val topics = List("feature","sequence")
+	    val topics = List("sequence","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
@@ -501,7 +501,7 @@ class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
 	  }
 	  case "similarity" => {
 	    
-	    val topics = List("feature","sequence")
+	    val topics = List("sequence","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
