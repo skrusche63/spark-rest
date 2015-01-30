@@ -26,14 +26,26 @@ object Configuration {
   val path = "application.conf"
   val config = ConfigFactory.load(path)
 
-  def actor():(Int,Int) = {
+  def actor:(Int,Int,Int) = {
   
     val cfg = config.getConfig("actor")
-    
-    val heartbeat = cfg.getInt("heartbeat")
+
+    val duration = cfg.getInt("duration")
+    val retries = cfg.getInt("retries")  
     val timeout = cfg.getInt("timeout")
     
-    (heartbeat,timeout)
+    (duration,retries,timeout)
+    
+  }
+
+  def admin():(String,Int) = {
+      
+    val cfg = config.getConfig("admin")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
     
   }
 
@@ -43,6 +55,28 @@ object Configuration {
     val size = cfg.getInt("size")
     
     size
+    
+  }
+
+  def find():(String,Int) = {
+      
+    val cfg = config.getConfig("find")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
+    
+  }
+ 
+  def redis:(String,String) = {
+  
+    val cfg = config.getConfig("redis")
+    
+    val host = cfg.getString("host")
+    val port = cfg.getString("port")
+    
+    (host,port)
     
   }
 
@@ -56,6 +90,28 @@ object Configuration {
     
     (time,retries,workers)
 
+  }
+
+  def track():(String,Int) = {
+      
+    val cfg = config.getConfig("track")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
+    
+  }
+
+  def train():(String,Int) = {
+      
+    val cfg = config.getConfig("train")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
+    
   }
 
   def web():(String,Int) = {

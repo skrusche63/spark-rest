@@ -18,16 +18,29 @@ package de.kp.spark.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.ActorSystem
-import spray.routing.{Route, SimpleRoutingApp}
+import akka.actor.{Actor,ActorLogging}
 
-object RestService extends SimpleRoutingApp {
+import de.kp.spark.rest.model._
+import scala.concurrent.Future
 
-  def start(route:Route,system:ActorSystem,host:String,port:Int) {
-    
-    implicit val actorSystem = system    
-    startServer(host, port)(route)
+abstract class BaseActor extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
   
+  protected def failure(req:ServiceRequest,message:String):ServiceResponse = {
+    
+    if (req == null) {
+      val data = Map("message" -> message)
+      new ServiceResponse("","",data,ResponseStatus.FAILURE)	
+      
+    } else {
+      val data = Map("uid" -> req.data("uid"), "message" -> message)
+      new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
+    
+    }
+    
   }
+  
+  protected def getResponse(service:String,message:String):Future[String]
 
 }
