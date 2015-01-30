@@ -66,7 +66,7 @@ class ElasticFeatureBuilder {
 
   }
  
-  def createSource(params:Map[String,String]):XContentBuilder = {
+  def createSourceJSON(params:Map[String,String]):XContentBuilder = {
     
     val uid = params("uid")    
     val site = params("site")
