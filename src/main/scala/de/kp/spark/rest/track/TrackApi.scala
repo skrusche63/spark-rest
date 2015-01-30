@@ -229,7 +229,7 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        */
 	  case "series" => {
 	    
-	    val topics = List("item","rule")
+	    val topics = List("sequence","rule")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }	      
