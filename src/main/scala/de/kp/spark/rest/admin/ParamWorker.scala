@@ -18,7 +18,7 @@ package de.kp.spark.rest.admin
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.rest.actor.BaseActor
+import de.kp.spark.rest.BaseActor
 import de.kp.spark.rest.Configuration
 
 import de.kp.spark.rest.model._

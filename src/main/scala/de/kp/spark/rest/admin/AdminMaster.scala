@@ -28,7 +28,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import de.kp.spark.rest.Configuration
 
 import de.kp.spark.rest.model._
-import de.kp.spark.rest.actor.BaseActor
+import de.kp.spark.rest.BaseActor
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future

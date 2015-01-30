@@ -25,7 +25,7 @@ object AdminServer {
   
   private def start(args:Array[String],system:ActorSystem) {
 
-    val (host,port) = Configuration.track
+    val (host,port) = Configuration.admin
     new AdminApi(host,port,system).start()
       
   }
