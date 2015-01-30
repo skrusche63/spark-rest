@@ -19,7 +19,7 @@ package de.kp.spark.rest.track
 */
 
 import de.kp.spark.rest.Configuration
-import de.kp.spark.rest.actor.BaseActor
+import de.kp.spark.rest.BaseActor
 
 import de.kp.spark.rest.model._
 import de.kp.spark.rest.elastic._
