@@ -19,7 +19,7 @@ package de.kp.spark.rest.find
 */
 
 import de.kp.spark.rest.RemoteContext
-import de.kp.spark.rest.actor.BaseActor
+import de.kp.spark.rest.BaseActor
 
 import de.kp.spark.rest.model._
 
