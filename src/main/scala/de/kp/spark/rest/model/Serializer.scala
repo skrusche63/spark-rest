@@ -35,18 +35,84 @@ case class AliveMessage()
 
 case class ActorsStatus(items:List[ActorStatus])
 
+case class Field(
+  name:String,datatype:String,value:String
+)
+case class Fields(items:List[Field])
+
+/**
+ * Param & Params are used to register the model parameters
+ * used for a certain data mining or model building task
+ */
+case class Param(
+  name:String,datatype:String,value:String
+)
+case class Params(items:List[Param])
+
 /* Request response protocol to interact with remote services */
 case class ServiceRequest(service:String,task:String,data:Map[String,String])
 case class ServiceResponse(service:String,task:String,data:Map[String,String],status:String)
+
+/**
+ * Service requests are mapped onto status descriptions 
+ * and are stored in a Redis instance
+ */
+case class Status(
+  service:String,task:String,value:String,timestamp:Long
+)
+
+case class StatusList(items:List[Status])
+
+object Messages {
+
+  def GENERAL_ERROR(uid:String):String = 
+    String.format("""[UID: %s] A general error occurred.""", uid)
+  
+  def SEARCH_INDEX_CREATED(uid:String):String = 
+    String.format("""[UID: %s] Search index created.""", uid)
+
+  def TASK_DOES_NOT_EXIST(uid:String):String = 
+    String.format("""[UID: %s] The task does not exist.""", uid)
+
+  def TASK_IS_UNKNOWN(uid:String,task:String):String = 
+    String.format("""[UID: %s] The task '%s' is unknown.""", uid, task)
+ 
+  def TRACKED_DATA_RECEIVED(uid:String):String = 
+    String.format("""[UID: %s] Tracked data received.""", uid)
+
+}
 
 object Serializer {
     
   implicit val formats = Serialization.formats(NoTypeHints)
 
   def serializeActorsStatus(stati:ActorsStatus):String = write(stati)
- 
-  def serializeRequest(request:ServiceRequest):String = write(request)
+  /*
+   * Serialization and de-serialization of field or metadata
+   * specification that describe the mapping from external
+   * data source fields to internal pre-defined variables
+   */
+  def serializeFields(fields:Fields):String = write(fields) 
+  def deserializeFields(fields:String):Fields = read[Fields](fields)
+  /*
+   * Serialization and de-serialization of model parameters
+   * used to build or train a specific model; these parameters
+   * refer to a certain task (uid) and model name (name)
+   */
+  def serializeParams(params:Params):String = write(params) 
+  def deserializeParams(params:String):Params = read[Params](params)
+
   def deserializeResponse(response:String):ServiceResponse = read[ServiceResponse](response)
+  def serializeResponse(response:ServiceResponse):String = write(response)
+  
+  def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
+  def serializeRequest(request:ServiceRequest):String = write(request)
+
+  def serializeStatus(status:Status):String = write(status)
+  def deserializeStatus(status:String):Status = read[Status](status)
+
+  def serializeStatusList(statuses:StatusList):String = write(statuses)
+  def deserializeStatusList(statuses:String):StatusList = read[StatusList](statuses)
 
 }
 
@@ -76,5 +142,37 @@ object ResponseStatus {
   
   val FAILURE:String = "failure"
   val SUCCESS:String = "success"
+  /**
+   * General purpose stati to describe a tracking process
+   */    
+  val TRACKING_STARTED:String = "predictive-works:tracking:started"
+  val TRACKING_FINISHED:String = "predictive-works:tracking:finsihed"
+  
+}
+
+object Topics {
+
+  val EVENT:String    = "event"
+  val ITEM:String     = "item"
+
+  val FEATURE:String  = "feature"
+  val POINT:String    = "point"
+    
+  val PRODUCT:String  = "product"
+
+  val RULE:String     = "rule"
+  val SEQUENCE:String = "sequence"
+
+  val STATE:String  = "state"
+  val VECTOR:String = "vector"
+    
+  private val topics = List(EVENT,ITEM,FEATURE,POINT,PRODUCT,RULE,SEQUENCE,STATE,VECTOR)
+  
+  def get(topic:String):String = {
+    
+    if (topics.contains(topic)) return topic    
+    throw new Exception("Unknown topic.")
+    
+  }
   
 }

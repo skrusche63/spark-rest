@@ -36,8 +36,6 @@ import scala.concurrent.Future
 class AdminMaster extends BaseActor {
 
   val (duration,retries,time) = Configuration.actor   
-	  	    
-  implicit val ec = context.dispatcher
   implicit val timeout:Timeout = DurationInt(time).second
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {

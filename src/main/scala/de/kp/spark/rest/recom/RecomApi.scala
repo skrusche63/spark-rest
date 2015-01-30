@@ -42,7 +42,7 @@ import scala.util.parsing.json._
 import de.kp.spark.rest.{Configuration,RestService}
 import de.kp.spark.rest.model._
 
-class RestApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
+class RecomApi(host:String,port:Int,system:ActorSystem) extends HttpService with Directives {
 
   val (duration,retries,time) = Configuration.actor   
 

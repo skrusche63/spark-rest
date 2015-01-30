@@ -40,7 +40,5 @@ abstract class BaseActor extends Actor with ActorLogging {
     }
     
   }
-  
-  protected def getResponse(service:String,message:String):Future[String]
 
 }

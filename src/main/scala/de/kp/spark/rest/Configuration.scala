@@ -49,15 +49,6 @@ object Configuration {
     
   }
 
-  def cache():Int = {
-  
-    val cfg = config.getConfig("cache")
-    val size = cfg.getInt("size")
-    
-    size
-    
-  }
-
   def find():(String,Int) = {
       
     val cfg = config.getConfig("find")
@@ -69,6 +60,17 @@ object Configuration {
     
   }
  
+  def recom():(String,Int) = {
+      
+    val cfg = config.getConfig("recom")
+      
+    val host = cfg.getString("host")
+    val port = cfg.getInt("port")
+
+    (host,port)
+    
+  }
+
   def redis:(String,String) = {
   
     val cfg = config.getConfig("redis")
@@ -78,18 +80,6 @@ object Configuration {
     
     (host,port)
     
-  }
-
-  def router():(Int,Int,Int) = {
-  
-    val cfg = config.getConfig("router")
-  
-    val time    = cfg.getInt("time")
-    val retries = cfg.getInt("retries")  
-    val workers = cfg.getInt("workers")
-    
-    (time,retries,workers)
-
   }
 
   def track():(String,Int) = {
@@ -106,17 +96,6 @@ object Configuration {
   def train():(String,Int) = {
       
     val cfg = config.getConfig("train")
-      
-    val host = cfg.getString("host")
-    val port = cfg.getInt("port")
-
-    (host,port)
-    
-  }
-
-  def web():(String,Int) = {
-      
-    val cfg = config.getConfig("web")
       
     val host = cfg.getString("host")
     val port = cfg.getInt("port")
