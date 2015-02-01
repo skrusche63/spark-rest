@@ -184,18 +184,10 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - index (String)
        * - type (String)
        * 
-       * The information element, 'feature' or 'product' determines how to proceed:
-       * 
-       * topic: feature
-       * 
-       * - names (String, comma separated list of feature names)
-       * - types (String, comma separated list of feature types)
-       * 
-       * topic: product
        */
       case "outlier" => {
 	    
-	    val topics = List("feature","product")
+	    val topics = List("product","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
@@ -379,12 +371,7 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - source (String)
        * - type (String)
        * 
-       * The information element, 'feature' or 'product' determines how to proceed:
-       * 
-       * topic: feature
-       * 
-       * - lbl. xxx (String, target value)
-       * - fea. xxx (Double, predictor value) 
+       * The information element, 'product' or 'vector' determines how to proceed:
        * 
        * topic: product
        * 
@@ -394,10 +381,17 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - item (Integer)
        * - price (Double)
        * 
+       * topic:vector
+       * 
+       * - row (Long)
+       * - col (Long)
+       * - lbl (String)
+       * - val (Double)
+       * 
        */   
 	  case "outlier" => {
 	    
-	    val topics = List("feature","product")
+	    val topics = List("product","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }

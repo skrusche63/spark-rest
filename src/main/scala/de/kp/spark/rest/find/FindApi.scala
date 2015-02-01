@@ -216,7 +216,7 @@ class FindApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        */  
 	  case "outlier" => {
 	    
-	    val topics = List("feature","product")
+	    val topics = List("product","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
