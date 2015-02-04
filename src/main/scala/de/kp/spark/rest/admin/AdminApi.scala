@@ -247,15 +247,13 @@ class AdminApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - uid (String)
        * - name (String)
        * 
-       * The information element, 'product' or 'vector' determines how to proceed:
+       * The information element, 'state' or 'vector' determines how to proceed:
        * 
-       * topic:product
+       * topic:state
        * 
        * - user (String)
-       * - timestamp (String) 
-       * - group (String)
-       * - item (Integer)
-       * - price (Double)
+       * - timestamp (Long) 
+       * - state (String)
        *  
        * topic:vector
        * 
@@ -267,7 +265,7 @@ class AdminApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        */    
 	  case "outlier" => {
 	    
-	    val topics = List("product","vector")
+	    val topics = List("state","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
