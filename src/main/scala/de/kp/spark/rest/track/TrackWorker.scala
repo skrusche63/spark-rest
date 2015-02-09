@@ -117,12 +117,6 @@ class TrackWorker extends BaseActor {
          writer.writeJSON(index, mapping, source)
          
        }
-       case "product" => {
-      
-         val source = prepareProduct(req)
-         writer.writeJSON(index, mapping, source)
-         
-       }
        case "sequence" => {
       
          val source = prepareSequence(req)
@@ -178,10 +172,6 @@ class TrackWorker extends BaseActor {
   
   protected def preparePoint(req:ServiceRequest):XContentBuilder = {
     new ElasticPointBuilder().createSourceJSON(req.data)    
-  }
-  
-  protected def prepareProduct(req:ServiceRequest):XContentBuilder = {
-    new ElasticProductBuilder().createSourceJSON(req.data)    
   }
   
   protected def prepareSequence(req:ServiceRequest):XContentBuilder = {

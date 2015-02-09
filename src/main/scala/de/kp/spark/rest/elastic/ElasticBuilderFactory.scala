@@ -30,14 +30,12 @@ object ElasticBuilderFactory {
       case "item"  => new ElasticItemBuilder().createBuilder(mapping)
 
       case "feature" => new ElasticFeatureBuilder().createBuilder(mapping,names,types)
-      case "product" => new ElasticProductBuilder().createBuilder(mapping)
+      case "point" => new ElasticPointBuilder().createBuilder(mapping)
 
       case "rule"     => new ElasticRuleBuilder().createBuilder(mapping)
       case "sequence" => new ElasticSequenceBuilder().createBuilder(mapping)
 
       case "state"  => new ElasticStateBuilder().createBuilder(mapping)
-
-      case "point"  => new ElasticPointBuilder().createBuilder(mapping)
       case "vector" => new ElasticVectorBuilder().createBuilder(mapping)
       
       case _ => null
