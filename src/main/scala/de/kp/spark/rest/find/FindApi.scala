@@ -160,12 +160,13 @@ class FindApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        * - uid (String)
        * - name (String)
        * 
+       * - algorithm (DF, GBT, RF)
        * - features (String, comma separated list of feature values)
        * 
        */  
       case "decision" => {
 	    
-        val topics = List("feature")
+        val topics = List("predict")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
       
       }
@@ -216,7 +217,7 @@ class FindApi(host:String,port:Int,system:ActorSystem) extends HttpService with 
        */  
 	  case "outlier" => {
 	    
-	    val topics = List("product","vector")
+	    val topics = List("state","vector")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
 	  }
