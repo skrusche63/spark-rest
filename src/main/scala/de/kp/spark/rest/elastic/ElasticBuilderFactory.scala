@@ -22,14 +22,13 @@ import org.elasticsearch.common.xcontent.XContentBuilder
 
 object ElasticBuilderFactory {
 
-  def getBuilder(builder:String,mapping:String,names:List[String]=List.empty[String],types:List[String]=List.empty[String]):XContentBuilder = {
+  def getBuilder(builder:String,mapping:String):XContentBuilder = {
     
     builder match {
 
       case "event" => new ElasticEventBuilder().createBuilder(mapping)
       case "item"  => new ElasticItemBuilder().createBuilder(mapping)
 
-      case "feature" => new ElasticFeatureBuilder().createBuilder(mapping,names,types)
       case "point" => new ElasticPointBuilder().createBuilder(mapping)
 
       case "rule"     => new ElasticRuleBuilder().createBuilder(mapping)
