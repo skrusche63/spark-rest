@@ -40,19 +40,13 @@ class IndexWorker extends BaseActor {
       val origin = sender
 
       try {
-        /*
-         * Retrieve the field specification for features from the request 
-         * as two lists, names & types; this is only required for dynamic
-         * field specifications 
-         */
-        val (names,types) = getSpec(req)
  
         val index   = req.data("index")
         val mapping = req.data("type")
     
         val topic = getTopic(req)
         
-        val builder = EBF.getBuilder(topic,mapping,names,types)
+        val builder = EBF.getBuilder(topic,mapping)
         val indexer = new ElasticIndexer()
     
         indexer.create(index,mapping,builder)
@@ -90,25 +84,6 @@ class IndexWorker extends BaseActor {
 
       }
     
-    }
-    
-  }
-  
-  protected def getSpec(req:ServiceRequest):(List[String],List[String]) = {
-   
-    val Array(task,topic) = req.task.split(":")
-    topic match {
-      
-      case "feature" => {
-    
-        val names = req.data("names").split(",").toList
-        val types = req.data("types").split(",").toList
-    
-        (names,types)
-        
-      }
-      case _ => (List.empty[String],List.empty[String])
-
     }
     
   }

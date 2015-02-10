@@ -152,21 +152,18 @@ object ResponseStatus {
 
 object Topics {
 
-  val EVENT:String    = "event"
-  val ITEM:String     = "item"
+  val EVENT:String = "event"
+  val ITEM:String  = "item"
 
-  val FEATURE:String  = "feature"
-  val POINT:String    = "point"
-    
-  val PRODUCT:String  = "product"
-
+  val POINT:String = "point"
+  
   val RULE:String     = "rule"
   val SEQUENCE:String = "sequence"
 
   val STATE:String  = "state"
   val VECTOR:String = "vector"
     
-  private val topics = List(EVENT,ITEM,FEATURE,POINT,PRODUCT,RULE,SEQUENCE,STATE,VECTOR)
+  private val topics = List(EVENT,ITEM,POINT,RULE,SEQUENCE,STATE,VECTOR)
   
   def get(topic:String):String = {
     

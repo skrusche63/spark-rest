@@ -212,13 +212,15 @@ class AdminApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - uid (String)
        * - name (String)
        * 
-       * - names (String, comma separated list of feature names)
-       * - types (String, comma separated list of feature types)
+       * - row (Long)
+       * - col (Long)
+       * - cat (String)
+       * - val (Double)
        * 
        */    
       case "decision" => {
 	    
-	    val topics = List("feature")
+	    val topics = List("point")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 	    
       }            

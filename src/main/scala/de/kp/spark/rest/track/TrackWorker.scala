@@ -101,12 +101,6 @@ class TrackWorker extends BaseActor {
          writer.writeJSON(index, mapping, source)        
         
        }       
-       case "feature" => {
-      
-         val source = prepareFeature(req)
-         writer.writeJSON(index, mapping, source)
-         
-       }
        case "item" => {
          writer.writeBulkJSON(index, mapping, prepareItem(req))
          
@@ -160,10 +154,6 @@ class TrackWorker extends BaseActor {
   
   protected def prepareEvent(req:ServiceRequest):XContentBuilder = {
     new ElasticEventBuilder().createSourceJSON(req.data)
-  }
-    
-  protected def prepareFeature(req:ServiceRequest):XContentBuilder = {
-    new ElasticFeatureBuilder().createSourceJSON(req.data)
   }
 
   protected def prepareItem(req:ServiceRequest):List[XContentBuilder] = {

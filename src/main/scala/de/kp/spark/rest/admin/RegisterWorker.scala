@@ -68,28 +68,6 @@ class RegisterWorker extends BaseActor {
         new ServiceResponse(req.service,req.task,Map("uid"-> uid),ResponseStatus.SUCCESS)
       
       }
-      case "feature" => {
-        /*
-         * ********************************************
-         *  Example:
-         *  
-         *  "names" -> "target,feature,feature,feature"
-         *  "types" -> "string,double,double,string"
-         *
-         * ********************************************
-         * 
-         * It is important to have the names specified in the order
-         * they are used (later) to retrieve the respective data
-         */
-        val names = req.data("names").split(",")
-        val types = req.data("types").split(",")
-        
-        val fields = buildFields(req,names,types)
-        cache.addFields(req, fields)    
-
-        new ServiceResponse(req.service,req.task,Map("uid"-> uid),ResponseStatus.SUCCESS)
-        
-      }
       case "item" => {
         
         val fields = new FieldBuilder().build(req,topic)
@@ -99,14 +77,6 @@ class RegisterWorker extends BaseActor {
                 
       }        
       case "point" => {
-        
-        val fields = new FieldBuilder().build(req,topic)
-        cache.addFields(req, fields)
-        
-        new ServiceResponse(req.service,req.task,Map("uid"-> uid),ResponseStatus.SUCCESS)
-          
-      }
-      case "product" => {
         
         val fields = new FieldBuilder().build(req,topic)
         cache.addFields(req, fields)
@@ -145,56 +115,6 @@ class RegisterWorker extends BaseActor {
           
        }
 
-    }
-    
-  }
-  
-  protected def buildFields(req:ServiceRequest,names:Array[String],types:Array[String]):List[Field] = {
-    
-    req.service match {
-      
-      case "decision" => {
-    
-        val fields = ArrayBuffer.empty[Field]       
-        val zip = names.zip(types)
-        
-        val target = zip.head
-        if (target._2 != "string") throw new Exception("Target variable must be a String")
-        
-        fields += new Field(target._1,target._2,"")
-        
-        for (feature <- zip.tail) {
-          
-          if (feature._2 != "string" && feature._2 != "double") throw new Exception("A feature must either be a String or a Double.")          
-          fields += new Field(feature._1, if (feature._2 == "string") "C" else "N","")
-        
-        }
-    
-        fields.toList
-        
-      }
-      
-      case "outlier" => {
-
-        val fields = ArrayBuffer.empty[Field]        
-        val zip = names.zip(types)
-        
-        val target = zip.head
-        if (target._2 != "string") throw new Exception("Target variable must be a String")
-        
-        fields += new Field(target._1,target._2,"")        
-        for (feature <- zip.tail) {
-          
-          if (feature._2 != "double") throw new Exception("A feature must be a Double.")          
-          fields += new Field(feature._1,"double","")
-        
-        }
-    
-        fields.toList
-        
-      }
-        
-      case _ => List.empty[Field]
     }
     
   }

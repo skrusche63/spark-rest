@@ -89,25 +89,6 @@ class FieldBuilder {
         fields.toList
         
       }
-
-      case "product" => {
-
-        val names = List("timestamp","user","group","item","price")
-        val types = List("long","string","string","integer","float")
-        
-        names.zip(types).foreach(entry => {
-          
-          val (name,datatype) = entry
-          val value = if (data.contains(name)) data(name) else name
-          
-          fields += new Field(name,datatype,value)
-          
-        })
-
-        fields.toList
-        
-      }
-
       case "sequence" => {
 
         val names = List("timestamp","user","group","item")
@@ -125,7 +106,6 @@ class FieldBuilder {
         fields.toList
         
       }
-
       case "state" => {
 
         val names = List("timestamp","user","state")
@@ -143,7 +123,6 @@ class FieldBuilder {
         fields.toList
         
       }
-
       case "vector" => {
 
         val names = List("row","col","lbl","val")

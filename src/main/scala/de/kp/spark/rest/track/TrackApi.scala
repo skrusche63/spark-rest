@@ -147,13 +147,10 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * - index (String)
        * - type (String)
        * 
-       * - names (String, comma separated list of feature names)
-       * - types (String, comma separated list of feature types)
-       * 
        */  
       case "decision" => {
 	    
-	    val topics = List("feature")
+	    val topics = List("point")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
         
       }	      
@@ -329,14 +326,16 @@ class TrackApi(host:String,port:Int,system:ActorSystem) extends HttpService with
        * 
        * - source (String)
        * - type (String)
-      * 
-       * - lbl. xxx (String, target value)
-       * - fea. xxx (Double, String, predictor value) 
+       * 
+       * - row (Long)
+       * - col (Long)
+       * - cat (String)
+       * - val (Double)
        * 
        */   
       case "decision" => {
 	    
-	    val topics = List("item")
+	    val topics = List("point")
 	    if (topics.contains(subject)) doRequest(ctx,service,task)	
 
       }      
